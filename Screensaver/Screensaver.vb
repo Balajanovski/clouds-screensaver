@@ -14,6 +14,9 @@ Public Class Screensaver
     ' Atmospheric scattering
     Private scatteringComponent As ScatteringComponent
 
+    ' Volumetric cloud raymarching
+    Private volumetricComponent As VolumetricComponent
+
     ' High Dynamic Range
     Private hdrComponent As HDRComponent
 
@@ -36,11 +39,12 @@ Public Class Screensaver
         MyBase.OnLoad(e)
 
         GL.Enable(EnableCap.DepthTest)
-        GL.ClearColor(1.0, 1.0, 1.0, 1.0)
+        GL.ClearColor(0.0, 0.0, 0.0, 1.0)
 
         screenQuadRenderer = New ScreenQuadRenderer()
         scatteringComponent = New ScatteringComponent("scattering.vert", "scattering.frag", screenQuadRenderer)
         hdrComponent = New HDRComponent("hdr.vert", "hdr.frag", -1.0, screenQuadRenderer)
+        volumetricComponent = New VolumetricComponent("volumetric.vert", "volumetric.frag", screenQuadRenderer)
 
     End Sub
 
@@ -64,7 +68,7 @@ Public Class Screensaver
         prevMouseY = cursorState.Y
 
         ' If any key is pressed, close screensaver
-        HandleKeyboard()
+        'HandleKeyboard()
     End Sub
 
     Private Sub HandleKeyboard()
@@ -82,7 +86,10 @@ Public Class Screensaver
 
         hdrComponent.Bind()
         GL.Clear(ClearBufferMask.ColorBufferBit Or ClearBufferMask.DepthBufferBit)
-        scatteringComponent.Render()
+        GL.Enable(EnableCap.Blend)
+        'scatteringComponent.Render(time)
+        volumetricComponent.Render(time)
+        GL.Disable(EnableCap.Blend)
         hdrComponent.UnBind()
 
         GL.Clear(ClearBufferMask.ColorBufferBit)

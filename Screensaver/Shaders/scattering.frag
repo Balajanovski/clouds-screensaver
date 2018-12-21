@@ -11,6 +11,8 @@ in vec3 vPos;
 
 layout (location = 0) out vec4 out_color;
 
+uniform float time;
+
 vec2 rsi(vec3 r0, vec3 rd, float sr) {
     // ray-sphere intersection that assumes
     // the sphere is centered at the origin.
@@ -119,7 +121,7 @@ void main() {
 	vec3 color = atmosphere(
         normalize(vPos),                // normalized ray direction
         vec3(0,6372e3,0),               // ray origin
-        vec3(0.0, 0.5, 1.0),            // position of the sun
+        vec3(/*cos(time)*0.5*/ 0.0, /*0.125*sin(time)+0.11*/ 0.25, /*abs(cos(time)*0.125) + 0.125*/ 0.5),            // position of the sun
         22.0,                           // intensity of the sun
         6371e3,                         // radius of the planet in meters
         6471e3,                         // radius of the atmosphere in meters

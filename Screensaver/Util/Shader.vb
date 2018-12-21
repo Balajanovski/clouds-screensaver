@@ -1,4 +1,5 @@
 ﻿Imports OpenTK.Graphics.OpenGL4
+Imports OpenTK
 Imports System.Reflection
 Imports System.IO
 
@@ -19,17 +20,39 @@ Public Class Shader
         GL.ShaderSource(vertexShader, File.ReadAllText(Path.Combine(tempDir, "Screensaver." & vertexSrc)))
         GL.CompileShader(vertexShader)
 
+        ' Check success
+        Dim success As Integer
+        GL.GetShader(vertexShader, ShaderParameter.CompileStatus, success)
+        If success <> All.True Then
+            Dim infoLog = GL.GetShaderInfoLog(vertexShader)
+            Throw New Exception(infoLog)
+        End If
+
         ' Compile frag shader
         ExportResource(Assembly.GetExecutingAssembly, "Screensaver", fragSrc)
         fragmentShader = GL.CreateShader(ShaderType.FragmentShader)
         GL.ShaderSource(fragmentShader, File.ReadAllText(Path.Combine(tempDir, "Screensaver." & fragSrc)))
         GL.CompileShader(fragmentShader)
 
+        ' Check success
+        GL.GetShader(fragmentShader, ShaderParameter.CompileStatus, success)
+        If success <> All.True Then
+            Dim infoLog = GL.GetShaderInfoLog(fragmentShader)
+            Throw New Exception(infoLog)
+        End If
+
         ' Link shaders into shader program
         shaderID = GL.CreateProgram()
         GL.AttachShader(shaderID, vertexShader)
         GL.AttachShader(shaderID, fragmentShader)
         GL.LinkProgram(shaderID)
+
+        ' Check success
+        GL.GetProgram(shaderID, GetProgramParameterName.LinkStatus, success)
+        If success <> All.True Then
+            Dim infoLog = GL.GetProgramInfoLog(shaderID)
+            Throw New Exception(infoLog)
+        End If
 
         ' Cleanup
         GL.DetachShader(shaderID, vertexShader)
@@ -48,6 +71,16 @@ Public Class Shader
 
     Public Sub SetFloat(name As String, value As Single)
         GL.Uniform1(GL.GetUniformLocation(shaderID, name), value)
+    End Sub
+
+    ' Setting vectors in OpenTK is bugged, so this hack must be used
+    Public Sub SetVec2(name As String, x As Single, y As Single)
+        GL.Uniform2(GL.GetUniformLocation(shaderID, name), x, y)
+    End Sub
+
+    ' Setting vectors in OpenTK is bugged, so this hack must be used
+    Public Sub SetVec3(name As String, x As Single, y As Single, z As Single)
+        GL.Uniform3(GL.GetUniformLocation(shaderID, name), x, y, z)
     End Sub
 
     ' Exports shaders from exe into temp folder so they can be compiled

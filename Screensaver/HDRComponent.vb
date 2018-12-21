@@ -47,7 +47,6 @@ Public Class HDRComponent
         End If
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0)
 
-        hdrShader.SetInt("hdrBuffer", 0)
         hdrShader.Use()
     End Sub
 
@@ -67,9 +66,12 @@ Public Class HDRComponent
         GL.Clear(ClearBufferMask.ColorBufferBit Or ClearBufferMask.DepthBufferBit)
         hdrShader.Use()
 
+        ' Set uniforms
+        hdrShader.SetInt("hdrBuffer", 0)
+        hdrShader.SetFloat("exposure", exposure)
+
         GL.ActiveTexture(TextureUnit.Texture0)
         GL.BindTexture(TextureTarget.Texture2D, colorBuffer)
-        hdrShader.SetFloat("exposure", exposure)
         quadRenderer.Render()
     End Sub
 

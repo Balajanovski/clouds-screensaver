@@ -1,4 +1,5 @@
 ﻿Imports OpenTK.Graphics.OpenGL4
+Imports OpenTK
 
 Public Class ScatteringComponent
     Private scatteringShader As Shader
@@ -10,8 +11,9 @@ Public Class ScatteringComponent
         quadRenderer = quadRen
     End Sub
 
-    Public Sub Render()
+    Public Sub Render(time As Single)
         scatteringShader.Use()
+        scatteringShader.SetFloat("time", time)
         quadRenderer.Render()
     End Sub
 
