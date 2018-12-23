@@ -99,6 +99,7 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Camera.vb" />
     <Compile Include="HDRComponent.vb" />
     <Compile Include="ScatteringComponent.vb" />
     <Compile Include="ScreenQuadRenderer.vb" />

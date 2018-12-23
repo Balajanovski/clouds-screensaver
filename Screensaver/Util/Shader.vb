@@ -73,14 +73,24 @@ Public Class Shader
         GL.Uniform1(GL.GetUniformLocation(shaderID, name), value)
     End Sub
 
-    ' Setting vectors in OpenTK is bugged, so this hack must be used
     Public Sub SetVec2(name As String, x As Single, y As Single)
         GL.Uniform2(GL.GetUniformLocation(shaderID, name), x, y)
     End Sub
 
-    ' Setting vectors in OpenTK is bugged, so this hack must be used
+    Public Sub SetVec2(name As String, v As Vector2)
+        GL.Uniform2(GL.GetUniformLocation(shaderID, name), v.X, v.Y)
+    End Sub
+
     Public Sub SetVec3(name As String, x As Single, y As Single, z As Single)
         GL.Uniform3(GL.GetUniformLocation(shaderID, name), x, y, z)
+    End Sub
+
+    Public Sub SetVec3(name As String, v As Vector3)
+        GL.Uniform3(GL.GetUniformLocation(shaderID, name), v.X, v.Y, v.Z)
+    End Sub
+
+    Public Sub SetMat4(name As String, transpose As Boolean, m As Matrix4)
+        GL.UniformMatrix4(GL.GetUniformLocation(shaderID, name), transpose, m)
     End Sub
 
     ' Exports shaders from exe into temp folder so they can be compiled

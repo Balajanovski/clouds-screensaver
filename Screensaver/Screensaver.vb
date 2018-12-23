@@ -20,6 +20,8 @@ Public Class Screensaver
     ' High Dynamic Range
     Private hdrComponent As HDRComponent
 
+    Private camera As Camera
+
     Private time As Double
 
     Public Sub New()
@@ -42,10 +44,10 @@ Public Class Screensaver
         GL.ClearColor(0.0, 0.0, 0.0, 1.0)
 
         screenQuadRenderer = New ScreenQuadRenderer()
-        scatteringComponent = New ScatteringComponent("scattering.vert", "scattering.frag", screenQuadRenderer)
+        camera = New Camera(New Vector3(0.0, 0.0, 0.0), New Vector3(0.0, 0.0, 0.0))
+        scatteringComponent = New ScatteringComponent("scattering.vert", "scattering.frag", screenQuadRenderer, camera)
+        volumetricComponent = New VolumetricComponent("volumetric.vert", "volumetric.frag", screenQuadRenderer, camera)
         hdrComponent = New HDRComponent("hdr.vert", "hdr.frag", -1.0, screenQuadRenderer)
-        volumetricComponent = New VolumetricComponent("volumetric.vert", "volumetric.frag", screenQuadRenderer)
-
     End Sub
 
     Protected Overrides Sub OnResize(e As EventArgs)

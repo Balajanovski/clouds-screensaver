@@ -7,6 +7,7 @@ Imports SharpNoise.Modules
 Public Class VolumetricComponent
     Private volumetricShader As Shader
     Private quadRenderer As ScreenQuadRenderer
+    Private camera As Camera
 
     ' Noise to be integrated for opacity sampling
     Private billow As New Billow() With {
@@ -24,7 +25,7 @@ Public Class VolumetricComponent
         .DestNoiseCube = noiseCube,
         .SourceModule = cloudNoise
     }
-    Private Const VOL_TEX_DIM As Integer = 64
+    Private Const VOL_TEX_DIM As Integer = 128
     Private volumeData(VOL_TEX_DIM * VOL_TEX_DIM * VOL_TEX_DIM) As Byte
     Private volumeTexture As Integer
 
@@ -65,21 +66,18 @@ Public Class VolumetricComponent
                                 ByVal x As Integer,
                                 ByVal y As Integer,
                                 ByRef arr As Byte())
-        arr(x + (VOL_TEX_DIM * y)) = val
+        arr(x + (DIST_TEX_DIM * y)) = val
     End Sub
 
-    Private Async Sub AwaitVolTexBuild(volTexBuildTask As Task)
-        Await volTexBuildTask
-    End Sub
-
-    Private Async Sub AwaitDistTexBuild(distTexBuildTask As Task)
-        Await distTexBuildTask
+    Private Shared Async Sub AwaitTask(task As Task)
+        Await task
     End Sub
 
 
-    Public Sub New(vertexSrc As String, fragSrc As String, ByRef quadRen As ScreenQuadRenderer)
+    Public Sub New(vertexSrc As String, fragSrc As String, ByRef quadRen As ScreenQuadRenderer, ByRef cam As Camera)
         volumetricShader = New Shader(vertexSrc, fragSrc)
         quadRenderer = quadRen
+        camera = cam
 
         ' Generate 3D noise for cloud opacity testing
         noiseCubeBuilder.SetDestSize(VOL_TEX_DIM, VOL_TEX_DIM, VOL_TEX_DIM)
@@ -92,7 +90,7 @@ Public Class VolumetricComponent
         Dim distTexBuildTask As Task = noisePlaneBuilder.BuildAsync(cancelNoiseGeneration)
 
         ' Copy all of the generated volume data into local array
-        AwaitVolTexBuild(volTexBuildTask)
+        AwaitTask(volTexBuildTask)
         For z = 0 To VOL_TEX_DIM - 1
             For y = 0 To VOL_TEX_DIM - 1
                 For x = 0 To VOL_TEX_DIM - 1
@@ -102,7 +100,7 @@ Public Class VolumetricComponent
         Next
 
         ' Copy all of the generated distortion data into local array
-        AwaitDistTexBuild(distTexBuildTask)
+        AwaitTask(distTexBuildTask)
         For y = 0 To DIST_TEX_DIM - 1
             For x = 0 To DIST_TEX_DIM - 1
                 Set2D(CType(noisePlane.GetValue(x, y) * 255.0, Byte), x, y, distortionData)
@@ -141,7 +139,9 @@ Public Class VolumetricComponent
         volumetricShader.SetInt("volumeTexture", 1)
         volumetricShader.SetInt("cloudDistortion", 2)
         volumetricShader.SetVec2("resolution", DisplayDevice.Default.Width, DisplayDevice.Default.Height)
-        volumetricShader.SetVec3("cameraPos", 0.0, 0.0, 5.0)
+        volumetricShader.SetFloat("time", time)
+        volumetricShader.SetVec3("cameraPos", camera.Position)
+        volumetricShader.SetMat4("view", False, camera.ViewMatrix)
 
         ' Activate and bind textures
         GL.ActiveTexture(TextureUnit.Texture1)
