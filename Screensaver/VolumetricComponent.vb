@@ -25,13 +25,14 @@ Public Class VolumetricComponent
         .DestNoiseCube = noiseCube,
         .SourceModule = cloudNoise
     }
-    Private Const VOL_TEX_DIM As Integer = 128
+    Private Const VOL_TEX_DIM As Integer = 64
     Private volumeData(VOL_TEX_DIM * VOL_TEX_DIM * VOL_TEX_DIM) As Byte
-    Private volumeTexture As Integer
+    Private volumeTex1 As Integer
+    Private volumeTex2 As Integer
+    Private volumeTex3 As Integer
 
     ' Cancellation token for asynchronous noise generation
     Private cancelNoiseGeneration As Threading.CancellationToken
-
 
     ' Noise for positioning clouds in sky
     Private perlin As New Perlin() With {
@@ -48,9 +49,10 @@ Public Class VolumetricComponent
         .DestNoiseMap = noisePlane,
         .SourceModule = positionDistortion
     }
-    Private Const DIST_TEX_DIM As Integer = 64
+    Private Const DIST_TEX_DIM As Integer = 32
     Private distortionData(DIST_TEX_DIM * DIST_TEX_DIM) As Byte
-    Private distortionTexture As Integer
+    Private distortionTex1 As Integer
+    Private distortionTex2 As Integer
 
     ' Utility method to treat 1D array as a 3D array
     Private Shared Sub Set3D(ByVal val As Byte,
@@ -69,28 +71,18 @@ Public Class VolumetricComponent
         arr(x + (DIST_TEX_DIM * y)) = val
     End Sub
 
-    Private Shared Async Sub AwaitTask(task As Task)
+    Private Shared Async Sub AwaitTaskAsync(task As Task)
         Await task
     End Sub
 
-
-    Public Sub New(vertexSrc As String, fragSrc As String, ByRef quadRen As ScreenQuadRenderer, ByRef cam As Camera)
-        volumetricShader = New Shader(vertexSrc, fragSrc)
-        quadRenderer = quadRen
-        camera = cam
+    Private Function GenerateCloudVolume() As Integer
+        ' Reseed noise generator
+        billow.Seed = New Random().Next
 
         ' Generate 3D noise for cloud opacity testing
-        noiseCubeBuilder.SetDestSize(VOL_TEX_DIM, VOL_TEX_DIM, VOL_TEX_DIM)
-        noiseCubeBuilder.SetBounds(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0)
-        Dim volTexBuildTask As Task = noiseCubeBuilder.BuildAsync(cancelNoiseGeneration)
-
-        ' Generate 2D noise for cloud position distortion
-        noisePlaneBuilder.SetDestSize(DIST_TEX_DIM, DIST_TEX_DIM)
-        noisePlaneBuilder.SetBounds(-1.0, 1.0, -1.0, 1.0)
-        Dim distTexBuildTask As Task = noisePlaneBuilder.BuildAsync(cancelNoiseGeneration)
+        noiseCubeBuilder.Build()
 
         ' Copy all of the generated volume data into local array
-        AwaitTask(volTexBuildTask)
         For z = 0 To VOL_TEX_DIM - 1
             For y = 0 To VOL_TEX_DIM - 1
                 For x = 0 To VOL_TEX_DIM - 1
@@ -99,17 +91,9 @@ Public Class VolumetricComponent
             Next
         Next
 
-        ' Copy all of the generated distortion data into local array
-        AwaitTask(distTexBuildTask)
-        For y = 0 To DIST_TEX_DIM - 1
-            For x = 0 To DIST_TEX_DIM - 1
-                Set2D(CType(noisePlane.GetValue(x, y) * 255.0, Byte), x, y, distortionData)
-            Next
-        Next
-
         ' Transfer volume noise data into OpenGL texture
-        volumeTexture = GL.GenTexture()
-        GL.BindTexture(TextureTarget.Texture3D, volumeTexture)
+        Dim volumeTex = GL.GenTexture()
+        GL.BindTexture(TextureTarget.Texture3D, volumeTex)
         GL.PixelStore(PixelStoreParameter.UnpackAlignment, 1)
         GL.TexImage3D(TextureTarget.Texture3D, 0, PixelFormat.Red, VOL_TEX_DIM,
                       VOL_TEX_DIM, VOL_TEX_DIM, 0, PixelFormat.Red, PixelType.UnsignedByte, volumeData)
@@ -119,8 +103,25 @@ Public Class VolumetricComponent
         GL.TexParameterI(TextureTarget.Texture3D, TextureParameterName.TextureWrapT, All.MirroredRepeat)
         GL.TexParameterI(TextureTarget.Texture3D, TextureParameterName.TextureWrapR, All.MirroredRepeat)
 
+        Return volumeTex
+    End Function
+
+    Private Function GenerateDistortionData() As Integer
+        ' Reseed noise generator
+        perlin.Seed = New Random().Next()
+
+        ' Generate 2D noise for cloud position distortion
+        noisePlaneBuilder.Build()
+
+        ' Copy all of the generated distortion data into local array
+        For y = 0 To DIST_TEX_DIM - 1
+            For x = 0 To DIST_TEX_DIM - 1
+                Set2D(CType(noisePlane.GetValue(x, y) * 255.0, Byte), x, y, distortionData)
+            Next
+        Next
+
         ' Transfer distortion noise data into OpenGL texture
-        distortionTexture = GL.GenTexture()
+        Dim distortionTexture = GL.GenTexture()
         GL.BindTexture(TextureTarget.Texture2D, distortionTexture)
         GL.TexImage2D(TextureTarget.Texture2D, 0, PixelFormat.Red, DIST_TEX_DIM,
                       DIST_TEX_DIM, 0, PixelFormat.Red, PixelType.UnsignedByte, distortionData)
@@ -129,6 +130,31 @@ Public Class VolumetricComponent
         GL.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, All.MirroredRepeat)
         GL.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, All.MirroredRepeat)
 
+        Return distortionTexture
+    End Function
+
+    Public Sub New(vertexSrc As String, fragSrc As String, ByRef quadRen As ScreenQuadRenderer, ByRef cam As Camera)
+        volumetricShader = New Shader(vertexSrc, fragSrc)
+        quadRenderer = quadRen
+        camera = cam
+
+        ' Set 3D noise builder parameters
+        noiseCubeBuilder.SetDestSize(VOL_TEX_DIM, VOL_TEX_DIM, VOL_TEX_DIM)
+        noiseCubeBuilder.SetBounds(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0)
+
+        ' Set 2D noise builder paramters
+        noisePlaneBuilder.SetDestSize(DIST_TEX_DIM, DIST_TEX_DIM)
+        noisePlaneBuilder.SetBounds(-1.0, 1.0, -1.0, 1.0)
+
+        ' Generate 3D noise
+        volumeTex1 = GenerateCloudVolume()
+        volumeTex2 = GenerateCloudVolume()
+        volumeTex3 = GenerateCloudVolume()
+
+        ' Generate 2D noise
+        distortionTex1 = GenerateDistortionData()
+        distortionTex2 = GenerateDistortionData()
+
         volumetricShader.Use()
     End Sub
 
@@ -136,18 +162,28 @@ Public Class VolumetricComponent
         volumetricShader.Use()
 
         ' Set uniforms
-        volumetricShader.SetInt("volumeTexture", 1)
-        volumetricShader.SetInt("cloudDistortion", 2)
+        volumetricShader.SetInt("volumeTexLayer1", 1)
+        volumetricShader.SetInt("volumeTexLayer2", 2)
+        volumetricShader.SetInt("volumeTexLayer3", 3)
+        volumetricShader.SetInt("cloudDistLayer1", 4)
+        volumetricShader.SetInt("cloudDistLayer1", 5)
         volumetricShader.SetVec2("resolution", DisplayDevice.Default.Width, DisplayDevice.Default.Height)
         volumetricShader.SetFloat("time", time)
         volumetricShader.SetVec3("cameraPos", camera.Position)
         volumetricShader.SetMat4("view", False, camera.ViewMatrix)
+        volumetricShader.SetFloat("fov", camera.FOV)
 
         ' Activate and bind textures
         GL.ActiveTexture(TextureUnit.Texture1)
-        GL.BindTexture(TextureTarget.Texture3D, volumeTexture)
+        GL.BindTexture(TextureTarget.Texture3D, volumeTex1)
         GL.ActiveTexture(TextureUnit.Texture2)
-        GL.BindTexture(TextureTarget.Texture2D, distortionTexture)
+        GL.BindTexture(TextureTarget.Texture3D, volumeTex2)
+        GL.ActiveTexture(TextureUnit.Texture3)
+        GL.BindTexture(TextureTarget.Texture3D, volumeTex3)
+        GL.ActiveTexture(TextureUnit.Texture4)
+        GL.BindTexture(TextureTarget.Texture2D, distortionTex1)
+        GL.ActiveTexture(TextureUnit.Texture5)
+        GL.BindTexture(TextureTarget.Texture2D, distortionTex2)
 
         quadRenderer.Render()
     End Sub
