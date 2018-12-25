@@ -5,7 +5,7 @@ Public Class Camera
     Private pos As Vector3
     Public Property Position() As Vector3
         Get
-            Return Position
+            Return pos
         End Get
         Set(value As Vector3)
             pos = value
