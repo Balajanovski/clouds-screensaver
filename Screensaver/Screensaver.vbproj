@@ -74,9 +74,6 @@
     <Reference Include="OpenTK, Version=3.0.1.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>..\packages\OpenTK.3.0.1\lib\net20\OpenTK.dll</HintPath>
     </Reference>
-    <Reference Include="SharpNoise, Version=0.11.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\SharpNoise.0.11.0\lib\net45\SharpNoise.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Deployment" />
@@ -101,6 +98,7 @@
   <ItemGroup>
     <Compile Include="Camera.vb" />
     <Compile Include="HDRComponent.vb" />
+    <Compile Include="NoiseGenerator.vb" />
     <Compile Include="ScatteringComponent.vb" />
     <Compile Include="ScreenQuadRenderer.vb" />
     <Compile Include="Screensaver.vb" />
@@ -120,7 +118,9 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Compile Include="Util\ComputeShader.vb" />
     <Compile Include="Util\Shader.vb" />
+    <Compile Include="Util\ShaderBase.vb" />
     <Compile Include="VolumetricComponent.vb" />
   </ItemGroup>
   <ItemGroup>
@@ -150,6 +150,7 @@
     <EmbeddedResource Include="Shaders\hdr.vert" />
     <EmbeddedResource Include="Shaders\volumetric.frag" />
     <EmbeddedResource Include="Shaders\volumetric.vert" />
+    <EmbeddedResource Include="Shaders\GenerateFBMNoise.comp" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
