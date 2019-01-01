@@ -5,23 +5,10 @@
 #define EPSILON 0.01f
 
 // Raymarching constants
-#define MAX_STEPS 64.0
+#define MAX_STEPS 16.0
 
 // Cloud constants
-#define CLOUD_RADIUS 1.5
-#define REPETITION_PERIOD vec2(2.5)
-#define SQUASH_FACTOR 2.0
-#define AMPLITUDE_FACTOR 0.707;
-#define FREQUENCY_FACTOR 2.5789;
-#define OPACITY_THRESHOLD 0.95
-#define DENSITY 0.1
-#define INNER_COLOR vec4(0.7, 0.7, 0.7, DENSITY)
-#define OUTER_COLOR vec4(1.0, 1.0, 1.0, 0.0)
-
-// Noise constants
-#define NUM_OCTAVES 5
-#define DISTORTION_NOISE_FREQ 0.5
-#define DISTORTION_NOISE_AMP 2.0
+#define OPACITY_THRESHOLD 0.97
 
 #define fragCoord (gl_FragCoord.xy)
 
@@ -33,13 +20,12 @@ uniform float time;
 uniform vec2 resolution;
 uniform vec3 cameraPos;
 uniform mat4 view;
-uniform vec3 sunDir; // TODO : Pass in sun parameters
+//uniform vec3 sunDir; // TODO : Pass in sun parameters
+const vec3 sunDir = normalize(vec3(-1.0,0.0,-1.));
 uniform float fov;
 #define FOV (fov / 180 * M_PI) // In radians
 
-uniform sampler3D noiseLayer1;
-uniform sampler3D noiseLayer2;
-uniform sampler3D noiseLayer3;
+uniform sampler3D simplexNoise;
 
 // ---------------------------------
 // Signed Distance Field Raymarching
@@ -66,90 +52,137 @@ vec3 rayDirection(in float fieldOfView, in vec2 size, in vec2 frag_coord) {
     return normalize(vec3(xy, -z));
 }
 
-float sampleCloudDistortion(in vec3 pos);
+// Sample pregenerated simplex noise
+float snoise(in vec3 pos) {
+	return texture(simplexNoise, pos*0.01).r;
+}
 
-float cloudSDF(in vec3 pos) {
-	pos.x -= time;
+// -----------------------------
+// Fractal brownian motion noise
+// Code sourced from: https://www.shadertoy.com/view/Xsl3zr
 
-	vec3 q = pos;
-	q.xz = mod(q.xz - REPETITION_PERIOD, 5.0) - REPETITION_PERIOD; // Repeat over x & z
-	q.y *= SQUASH_FACTOR;										   // Squash over y
-	float dist = sphereSDF(q, CLOUD_RADIUS, vec3(0.0));
-
-	pos.y -= time * 0.3;										   // Offset based on time
-	dist += sampleCloudDistortion(pos);							   // Distort based on noise
-
-	return dist;
+float fbm(in vec3 p) {
+    float f;
+    f = 0.5000*snoise(p); p = p*2.02;
+    f += 0.2500*snoise(p); p = p*2.03;
+    f += 0.1250*snoise(p); p = p*2.01;
+    f += 0.0625*snoise(p);
+    return f;
 }
 
 // ---------------------
 // Sampling cloud volume
 // ---------------------
 
-float fbm(in vec3 pos) {
-	return mix(texture(noiseLayer1, pos).r, 
-			   texture(noiseLayer2, pos).r, 
-			   texture(noiseLayer3, pos).r);
+vec4 map(in vec3 p) {
+	float d = 0.1 + 0.8 * sin(0.6*p.z)*sin(0.5*p.x) - p.y;
+
+    vec3 q = p;
+    float f = fbm(q);
+    d += 2.75 * f;
+
+    d = clamp( d, 0.0, 1.0 );
+    
+    vec4 res = vec4( d );
+    
+    vec3 col = 1.15 * vec3(1.0,0.95,0.8);
+    col += vec3(1.,0.,0.) * exp2(res.x*10.-10.);
+    res.xyz = mix( col, vec3(0.7,0.7,0.7), res.x );
+    
+    return res;
 }
-
-float sampleCloudDistortion(in vec3 pos) {
-	return fbm(pos * DISTORTION_NOISE_FREQ) * DISTORTION_NOISE_AMP;
-}
-
-// Map distance to color
-// Sourced from: https://www.shadertoy.com/view/Xsl3zr
-vec4 shade(float d) {	
-	return mix(INNER_COLOR, OUTER_COLOR, smoothstep(0.5, 1.0, d));
-}
-
-// Maps position to color
-// Sourced from: https://www.shadertoy.com/view/Xsl3zr
-vec4 volumeFunc(vec3 pos) {
-	float dist = cloudSDF(pos);
-	vec4 color = shade(dist);
-	color.rgb *= smoothstep(-1.0, 0.0, pos.y)*0.5+0.5;	// Emulate shadows
-	float r = length(pos)*0.04;
-	color.a *= exp(-r*r);								// Fog
-	return color;
-}
-
-// Samples Light
-// Sourced from: https://www.shadertoy.com/view/Xsl3zr
-float sampleLight(in vec3 pos)
-{
-	const int LightSteps = 8;
-	const float ShadowDensity = 1.0;
-	vec3 lightStep = (sunDir * 2.0) / float(LightSteps);
-	float t = 1.0;	// transmittance
-	for(int i=0;  i < LightSteps; ++i) {
-		vec4 col = volumeFunc(pos);
-		t *= max(0.0, 1.0 - col.a * ShadowDensity);
-		//if (t < 0.01)
-			//break;
-		pos += lightStep;
-	}
-
-	return t;
-}
-
 
 // Volumetric raymarching algorithm
-vec3 volumetricRaymarch(in vec3 p, in vec3 rayDir, in float stepSize) {
+vec4 volumetricRaymarch(in vec3 p, in vec3 rayDir, in float stepSize, in vec2 t, in vec2 dt, in vec2 wt, in vec3 endRay) {
 	vec4 accumulation = vec4(0.0);
 
+	// Fade samples at far extent
+    float f = 0.6; 
+    float endFade = f*float(MAX_STEPS)*stepSize;
+    float startFade = .8*endFade;
+
 	// Integrate over the volume texture to determine opacity
+	// Sample min(MAX_STEPS, totalSamples) values from noise
+	int samplePositions[int(MAX_STEPS)];
+	vec4 samples[int(MAX_STEPS)];
 	for (int i = 0; i < MAX_STEPS; ++i) {
-		vec4 color = volumeFunc(p + rayDir*i*stepSize);
+		// data for next sample
+		vec4 data = t.x < t.y ? vec4( t.x, wt.x, dt.x, 0.0 ) : vec4( t.y, wt.y, 0.0, dt.y );
+		vec3 pos = p + data.x * rayDir;
+		float w = data.y;
+		t += data.zw;
 
-		color.rgb *= color.a;
-		accumulation += color * (1.0 - accumulation.a);
-
-		if (accumulation.a > OPACITY_THRESHOLD) {
+		// If the sampling position is out of the bounding box, end the loop
+		if (length(pos - p) > length(endRay - p) - EPSILON) {
 			break;
+		}
+
+		// Move position based on time
+		pos.z -= 0.1 * time;
+        
+		// fade samples at far extent
+		w *= smoothstep(endFade, startFade, data.x);
+
+		vec4 color = map(pos);
+
+		// Inigo Quilez's Cloud Shading
+		// Sourced from: https://www.shadertoy.com/view/XslGRr
+		float dif = clamp((color.w - map(pos+0.6*sunDir).w)/0.6, 0.0, 1.0 );
+		vec3 lin = vec3(0.51, 0.53, 0.63)*1.35 + 0.55*vec3(0.85, 0.57, 0.3)*dif;
+		color.rgb *= lin;
+		color.rgb *= color.rgb;
+		color.a *= 0.75;
+		color.rgb *= color.a;
+
+		samples[i] = color * (1.0 - accumulation.a) * w;
+		samplePositions[i] = int(length(p - pos));
+		accumulation += samples[i];
+
+		if (accumulation.a > OPACITY_THRESHOLD - EPSILON) {
+			return accumulation;
 		}
 	}
 
 	return accumulation;
+}
+
+// Plane Alignment
+// From: https://github.com/huwb/volsample
+//NOTE: This assumes the volume will only be UNIFORMLY scaled. Non uniform scale would require tons of little changes.
+float mysign( float x ) { return x < 0. ? -1. : 1. ; }
+vec2 mysign( vec2 x ) { return vec2( x.x < 0. ? -1. : 1., x.y < 0. ? -1. : 1. ) ; }
+
+void planeAlignment(in vec3 ro, in vec3 rd, in float stepSize, out vec2 t, out vec2 dt, out vec2 wt) {
+	// structured sampling pattern line normals
+    vec3 n0 = (abs( rd.x ) > abs( rd.z )) ? vec3(1., 0., 0.) : vec3(0., 0., 1.); // non diagonal
+    vec3 n1 = vec3(mysign( rd.x * rd.z ), 0., 1.); // diagonal
+
+    // normal lengths (used later)
+    vec2 ln = vec2(length( n0 ), length( n1 ));
+    n0 /= ln.x;
+    n1 /= ln.y;
+
+    // some useful DPs
+    vec2 ndotro = vec2(dot( ro, n0 ), dot( ro, n1 ));
+    vec2 ndotrd = vec2(dot( rd, n0 ), dot( rd, n1 ));
+
+    // step size
+	vec2 period = ln * stepSize;
+    dt = period / abs( ndotrd );
+
+    // dist to line through origin
+    vec2 dist = abs( ndotro / ndotrd );
+
+    // raymarch start offset - skips leftover bit to get from ro to first strata lines
+    t = -mysign( ndotrd ) * mod( ndotro, period ) / abs( ndotrd );
+    if( ndotrd.x > 0. ) t.x += dt.x;
+    if( ndotrd.y > 0. ) t.y += dt.y;
+
+    // sample weights
+    float minperiod = stepSize;
+    float maxperiod = sqrt( 2. )*stepSize;
+    wt = smoothstep( maxperiod, minperiod, dt/ln );
+    wt /= (wt.x + wt.y);
 }
 
 // Box-intersection test for bounding the clouds
@@ -181,9 +214,9 @@ intersectBox(vec3 ro, vec3 rd, vec3 boxmin, vec3 boxmax, out float tnear, out fl
 void main() {
 	vec3 rayDir = rayDirection(FOV, resolution, fragCoord);
 
-	// Bound the clouds
-	vec3 boxMin = vec3(-50.0, 2.0, -50.0);
-	vec3 boxMax = vec3(50.0, -2.0, 50.0);
+	// Bind the clouds
+	vec3 boxMin = vec3(-50.0, 10.0, -50.0);
+	vec3 boxMax = vec3(50.0, -10.0, 50.0);
 	float tNear, tFar;
 	bool hit = intersectBox(cameraPos, rayDir, boxMin, boxMax, tNear, tFar);
 	tNear = max(tNear, 0.0);
@@ -193,9 +226,12 @@ void main() {
 		vec3 pNear = cameraPos + rayDir*tNear;
 		vec3 pFar = cameraPos + rayDir*tFar;
 
-		float stepSize = length(pFar - pNear) / MAX_STEPS;
+		float stepSize = length(pFar - pNear) / min(MAX_STEPS, length(pFar - pNear));
 
-		out_color = vec4(volumetricRaymarch(pNear, rayDir, stepSize), 1.0);
+		vec2 t, dt, wt;
+		planeAlignment(pNear, rayDir, stepSize, t, dt, wt);
+
+		out_color = volumetricRaymarch(pNear, rayDir, stepSize, t, dt, wt, pFar);
 	} else {
 		out_color = vec4(0.0, 0.0, 0.0, 0.0);
 	}

@@ -14,13 +14,14 @@ Public Class NoiseGenerator
         GL.ActiveTexture(TextureUnit.Texture0)
         GL.BindTexture(TextureTarget.Texture3D, noise)
         GL.PixelStore(PixelStoreParameter.UnpackAlignment, 1)
-        GL.TexParameterI(TextureTarget.Texture3D, TextureParameterName.TextureWrapS, All.MirroredRepeat)
-        GL.TexParameterI(TextureTarget.Texture3D, TextureParameterName.TextureWrapT, All.MirroredRepeat)
-        GL.TexParameterI(TextureTarget.Texture3D, TextureParameterName.TextureWrapR, All.MirroredRepeat)
-        GL.TexImage3D(TextureTarget.Texture3D, 0, PixelInternalFormat.Rgba8, width, height, depth, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero)
-        GL.BindImageTexture(0, noise, 0, False, 0, TextureAccess.WriteOnly, SizedInternalFormat.Rgba8)
+        GL.TexParameterI(TextureTarget.Texture3D, TextureParameterName.TextureWrapS, All.Repeat)
+        GL.TexParameterI(TextureTarget.Texture3D, TextureParameterName.TextureWrapT, All.Repeat)
+        GL.TexParameterI(TextureTarget.Texture3D, TextureParameterName.TextureWrapR, All.Repeat)
+        GL.TexStorage3D(TextureTarget3d.Texture3D, 1, SizedInternalFormat.R8, width, height, depth)
+        GL.BindImageTexture(0, noise, 0, True, 0, TextureAccess.WriteOnly, SizedInternalFormat.R8)
 
         ' Dispatch shader
+        shader.Use()
         shader.Dispatch(width, height, depth)
 
         Return noise
@@ -29,6 +30,7 @@ Public Class NoiseGenerator
     Public Sub AwaitComputationEnd()
         ' Wait for computation to finish
         GL.MemoryBarrier(MemoryBarrierFlags.ShaderImageAccessBarrierBit)
-        GL.Finish()
+        GL.MemoryBarrier(MemoryBarrierFlags.ShaderStorageBarrierBit)
+        'GL.MemoryBarrier(MemoryBarrierFlags.TextureFetchBarrierBit)
     End Sub
 End Class

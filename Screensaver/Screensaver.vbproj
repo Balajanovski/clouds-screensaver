@@ -150,7 +150,7 @@
     <EmbeddedResource Include="Shaders\hdr.vert" />
     <EmbeddedResource Include="Shaders\volumetric.frag" />
     <EmbeddedResource Include="Shaders\volumetric.vert" />
-    <EmbeddedResource Include="Shaders\GenerateFBMNoise.comp" />
+    <EmbeddedResource Include="Shaders\GenerateSimplexNoise.comp" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />

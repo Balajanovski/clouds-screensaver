@@ -1,6 +1,6 @@
 ﻿#version 440 core
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
-layout(rgba8, binding = 0) uniform image3D imgOutput;
+layout(r8, binding = 0) uniform image3D noiseOutput;
 
 // ----------------------------
 // Simplex noise
@@ -18,13 +18,11 @@ vec4 permute(vec4 x) {
      return mod289(((x*34.0)+1.0)*x);
 }
 
-vec4 taylorInvSqrt(vec4 r)
-{
+vec4 taylorInvSqrt(vec4 r) {
   return 1.79284291400159 - 0.85373472095314 * r;
 }
 
-float snoise(vec3 v)
-  { 
+float snoise(vec3 v) { 
   const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
   const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
 
@@ -92,26 +90,14 @@ float snoise(vec3 v)
                                 dot(p2,x2), dot(p3,x3) ) );
 }
 
-// -----------------------------
-// Fractal brownian motion noise
-// Code sourced from: https://www.shadertoy.com/view/Xsl3zr
-
-float fbm(vec3 p)
-{
-    float f;
-    f = 0.5000*snoise( p ); p = p*2.02;
-    f += 0.2500*snoise( p ); p = p*2.03;
-    f += 0.1250*snoise( p ); p = p*2.01;
-    f += 0.0625*snoise( p );
-    return f;
-}
-
 void main() {
 	float pixelValue = 0.0;
 	// get x, y pos in texture
 	ivec3 pixelCoords = ivec3(gl_GlobalInvocationID.xyz);
-	
-	pixelValue = fbm(vec3(pixelCoords));
 
-	imageStore(imgOutput, pixelCoords, vec4(pixelValue, pixelValue, pixelValue, 1.0));
+	pixelValue = snoise(vec3(float(pixelCoords.x), 
+						     float(pixelCoords.y), 
+						     float(pixelCoords.z)));
+
+	imageStore(noiseOutput, pixelCoords, vec4(pixelValue, pixelValue, pixelValue, 1.0));
 }

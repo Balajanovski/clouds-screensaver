@@ -42,9 +42,10 @@ Public Class Screensaver
 
         GL.Enable(EnableCap.DepthTest)
         GL.ClearColor(0.0, 0.0, 0.0, 1.0)
+        GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha)
 
         screenQuadRenderer = New ScreenQuadRenderer()
-        camera = New Camera(New Vector3(0.0, 5.0, 0.0), New Vector3(0.0, 0.0, 0.0))
+        camera = New Camera(New Vector3(0.0, 0.8, 0.0), New Vector3(0.0, 0.0, 0.0))
         scatteringComponent = New ScatteringComponent("scattering.vert", "scattering.frag", screenQuadRenderer, camera)
         volumetricComponent = New VolumetricComponent("volumetric.vert", "volumetric.frag", screenQuadRenderer, camera)
         hdrComponent = New HDRComponent("hdr.vert", "hdr.frag", -1.0, screenQuadRenderer)
@@ -89,9 +90,11 @@ Public Class Screensaver
         hdrComponent.Bind()
         GL.Clear(ClearBufferMask.ColorBufferBit Or ClearBufferMask.DepthBufferBit)
         GL.Enable(EnableCap.Blend)
-        'scatteringComponent.Render(time)
+        GL.Disable(EnableCap.DepthTest)
+        scatteringComponent.Render(time)
         volumetricComponent.Render(time)
         GL.Disable(EnableCap.Blend)
+        GL.Enable(EnableCap.DepthTest)
         hdrComponent.UnBind()
 
         GL.Clear(ClearBufferMask.ColorBufferBit)
