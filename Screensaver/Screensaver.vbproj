@@ -98,7 +98,8 @@
   <ItemGroup>
     <Compile Include="Camera.vb" />
     <Compile Include="HDRComponent.vb" />
-    <Compile Include="NoiseGenerator.vb" />
+    <Compile Include="NoiseGenerator2D.vb" />
+    <Compile Include="NoiseGenerator3D.vb" />
     <Compile Include="ScatteringComponent.vb" />
     <Compile Include="ScreenQuadRenderer.vb" />
     <Compile Include="Screensaver.vb" />
@@ -150,7 +151,8 @@
     <EmbeddedResource Include="Shaders\hdr.vert" />
     <EmbeddedResource Include="Shaders\volumetric.frag" />
     <EmbeddedResource Include="Shaders\volumetric.vert" />
-    <EmbeddedResource Include="Shaders\GenerateSimplexNoise.comp" />
+    <EmbeddedResource Include="Shaders\Generate3DSimplexNoise.comp" />
+    <EmbeddedResource Include="Shaders\Generate2DPerlinNoise.comp" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />

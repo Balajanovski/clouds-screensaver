@@ -1,6 +1,6 @@
 ﻿Imports OpenTK.Graphics.OpenGL4
 
-Public Class NoiseGenerator
+Public Class NoiseGenerator3D
     Private shader As ComputeShader
 
     ' Uses compute shader
@@ -8,15 +8,15 @@ Public Class NoiseGenerator
         shader = New ComputeShader(shaderSrc)
     End Sub
 
-    Public Function GenerateNoise(width As Integer, height As Integer, depth As Integer) As Integer
+    Public Function GenerateNoise(width As Integer, height As Integer, depth As Integer, format As SizedInternalFormat) As Integer
         ' Generate texture
         Dim noise = GL.GenTexture()
         GL.ActiveTexture(TextureUnit.Texture0)
         GL.BindTexture(TextureTarget.Texture3D, noise)
         GL.PixelStore(PixelStoreParameter.UnpackAlignment, 1)
-        GL.TexParameterI(TextureTarget.Texture3D, TextureParameterName.TextureWrapS, All.Repeat)
-        GL.TexParameterI(TextureTarget.Texture3D, TextureParameterName.TextureWrapT, All.Repeat)
-        GL.TexParameterI(TextureTarget.Texture3D, TextureParameterName.TextureWrapR, All.Repeat)
+        GL.TexParameterI(TextureTarget.Texture3D, TextureParameterName.TextureWrapS, All.MirroredRepeat)
+        GL.TexParameterI(TextureTarget.Texture3D, TextureParameterName.TextureWrapT, All.MirroredRepeat)
+        GL.TexParameterI(TextureTarget.Texture3D, TextureParameterName.TextureWrapR, All.MirroredRepeat)
         GL.TexStorage3D(TextureTarget3d.Texture3D, 1, SizedInternalFormat.R8, width, height, depth)
         GL.BindImageTexture(0, noise, 0, True, 0, TextureAccess.WriteOnly, SizedInternalFormat.R8)
 
@@ -31,6 +31,6 @@ Public Class NoiseGenerator
         ' Wait for computation to finish
         GL.MemoryBarrier(MemoryBarrierFlags.ShaderImageAccessBarrierBit)
         GL.MemoryBarrier(MemoryBarrierFlags.ShaderStorageBarrierBit)
-        'GL.MemoryBarrier(MemoryBarrierFlags.TextureFetchBarrierBit)
+        GL.MemoryBarrier(MemoryBarrierFlags.TextureFetchBarrierBit)
     End Sub
 End Class

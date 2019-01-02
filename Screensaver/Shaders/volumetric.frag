@@ -8,7 +8,8 @@
 #define MAX_STEPS 16.0
 
 // Cloud constants
-#define OPACITY_THRESHOLD 0.97
+#define OPACITY_THRESHOLD 0.98
+#define COVERAGE 60.0
 
 #define fragCoord (gl_FragCoord.xy)
 
@@ -21,7 +22,7 @@ uniform vec2 resolution;
 uniform vec3 cameraPos;
 uniform mat4 view;
 //uniform vec3 sunDir; // TODO : Pass in sun parameters
-const vec3 sunDir = normalize(vec3(-1.0,0.0,-1.));
+const vec3 sunDir = normalize( vec3(-1.0,0.0,0.0) );
 uniform float fov;
 #define FOV (fov / 180 * M_PI) // In radians
 
@@ -54,7 +55,7 @@ vec3 rayDirection(in float fieldOfView, in vec2 size, in vec2 frag_coord) {
 
 // Sample pregenerated simplex noise
 float snoise(in vec3 pos) {
-	return texture(simplexNoise, pos*0.01).r;
+	return texture(simplexNoise, pos*0.005).r;
 }
 
 // -----------------------------
@@ -63,10 +64,11 @@ float snoise(in vec3 pos) {
 
 float fbm(in vec3 p) {
     float f;
-    f = 0.5000*snoise(p); p = p*2.02;
-    f += 0.2500*snoise(p); p = p*2.03;
-    f += 0.1250*snoise(p); p = p*2.01;
-    f += 0.0625*snoise(p);
+	vec3 q = p - vec3(0.0,0.1,1.0)*time*-0.5;
+    f = 0.5000*snoise(q); q = q*2.02 ;
+    f += 0.2500*snoise(q); q = q*2.03;
+    f += 0.1250*snoise(q); q = q*2.01;
+    f += 0.0625*snoise(q);
     return f;
 }
 
@@ -92,6 +94,11 @@ vec4 map(in vec3 p) {
     return res;
 }
 
+// Utility function that maps a value from one range to another .
+/*float Remap ( float original_value , float original_min , float original_max , float new_min , float new_max ) {
+    return new_min + ( ( ( original_value ? original_min) / ( original_max ? original_min ) ) ? ( new_max ? new_min ) );
+}*/
+
 // Volumetric raymarching algorithm
 vec4 volumetricRaymarch(in vec3 p, in vec3 rayDir, in float stepSize, in vec2 t, in vec2 dt, in vec2 wt, in vec3 endRay) {
 	vec4 accumulation = vec4(0.0);
@@ -116,9 +123,6 @@ vec4 volumetricRaymarch(in vec3 p, in vec3 rayDir, in float stepSize, in vec2 t,
 		if (length(pos - p) > length(endRay - p) - EPSILON) {
 			break;
 		}
-
-		// Move position based on time
-		pos.z -= 0.1 * time;
         
 		// fade samples at far extent
 		w *= smoothstep(endFade, startFade, data.x);
@@ -216,7 +220,7 @@ void main() {
 
 	// Bind the clouds
 	vec3 boxMin = vec3(-50.0, 10.0, -50.0);
-	vec3 boxMax = vec3(50.0, -10.0, 50.0);
+	vec3 boxMax = vec3(50.0, -10.0, 100.0);
 	float tNear, tFar;
 	bool hit = intersectBox(cameraPos, rayDir, boxMin, boxMax, tNear, tFar);
 	tNear = max(tNear, 0.0);
