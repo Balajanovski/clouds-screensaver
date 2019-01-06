@@ -22,6 +22,7 @@ Public Class Shader
         ' Compile frag shader
         ExportResource(Assembly.GetExecutingAssembly, "Screensaver", fragSrc)
         fragmentShader = GL.CreateShader(ShaderType.FragmentShader)
+        Dim shaderCode = File.ReadAllText(Path.Combine(tempDir, "Screensaver." & fragSrc))
         GL.ShaderSource(fragmentShader, File.ReadAllText(Path.Combine(tempDir, "Screensaver." & fragSrc)))
         GL.CompileShader(fragmentShader)
         CheckShaderCompilationSuccess(fragmentShader)

@@ -1,5 +1,4 @@
-﻿Imports System
-Imports OpenTK
+﻿Imports OpenTK
 Imports OpenTK.Graphics
 Imports OpenTK.Graphics.OpenGL4
 Imports OpenTK.Input
@@ -45,10 +44,10 @@ Public Class Screensaver
         GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha)
 
         screenQuadRenderer = New ScreenQuadRenderer()
-        camera = New Camera(New Vector3(0.0, 1.5, 0.0), New Vector3(0.0, 0.0, 0.0))
-        scatteringComponent = New ScatteringComponent("scattering.vert", "scattering.frag", screenQuadRenderer, camera)
-        volumetricComponent = New VolumetricComponent("volumetric.vert", "volumetric.frag", screenQuadRenderer, camera)
-        hdrComponent = New HDRComponent("hdr.vert", "hdr.frag", -0.8, screenQuadRenderer)
+        camera = New Camera(New Vector3(0.0, 1500000.0, 0.0), New Vector3(0.0, 0.0, 0.0))
+        scatteringComponent = New ScatteringComponent("ScreenQuadRenderer.vert", "scattering.frag", screenQuadRenderer, camera)
+        volumetricComponent = New VolumetricComponent("ScreenQuadRenderer.vert", "volumetric.frag", screenQuadRenderer, camera)
+        hdrComponent = New HDRComponent("ScreenQuadRenderer.vert", "hdr.frag", -0.8, screenQuadRenderer)
     End Sub
 
     Protected Overrides Sub OnResize(e As EventArgs)

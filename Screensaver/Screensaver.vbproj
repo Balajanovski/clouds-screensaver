@@ -146,13 +146,13 @@
     <None Include="OpenTK.dll.config" />
     <None Include="packages.config" />
     <EmbeddedResource Include="Shaders\scattering.frag" />
-    <EmbeddedResource Include="Shaders\scattering.vert" />
     <EmbeddedResource Include="Shaders\hdr.frag" />
-    <EmbeddedResource Include="Shaders\hdr.vert" />
+    <EmbeddedResource Include="Shaders\ScreenQuadRenderer.vert" />
     <EmbeddedResource Include="Shaders\volumetric.frag" />
-    <EmbeddedResource Include="Shaders\volumetric.vert" />
-    <EmbeddedResource Include="Shaders\Generate3DSimplexNoise.comp" />
-    <EmbeddedResource Include="Shaders\Generate2DPerlinNoise.comp" />
+    <EmbeddedResource Include="Shaders\GenerateWeatherTexture.comp" />
+    <EmbeddedResource Include="Shaders\Generate2DCurlNoise.comp" />
+    <EmbeddedResource Include="Shaders\Generate3DWorleyNoise.comp" />
+    <EmbeddedResource Include="Shaders\Generate3DPerlinWorleyNoise.comp" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />

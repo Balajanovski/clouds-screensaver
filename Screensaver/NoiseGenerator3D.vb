@@ -17,12 +17,15 @@ Public Class NoiseGenerator3D
         GL.TexParameterI(TextureTarget.Texture3D, TextureParameterName.TextureWrapS, All.MirroredRepeat)
         GL.TexParameterI(TextureTarget.Texture3D, TextureParameterName.TextureWrapT, All.MirroredRepeat)
         GL.TexParameterI(TextureTarget.Texture3D, TextureParameterName.TextureWrapR, All.MirroredRepeat)
-        GL.TexStorage3D(TextureTarget3d.Texture3D, 1, SizedInternalFormat.R8, width, height, depth)
-        GL.BindImageTexture(0, noise, 0, True, 0, TextureAccess.WriteOnly, SizedInternalFormat.R8)
+        GL.TexStorage3D(TextureTarget3d.Texture3D, 1, format, width, height, depth)
+        GL.BindImageTexture(0, noise, 0, True, 0, TextureAccess.WriteOnly, format)
 
         ' Dispatch shader
         shader.Use()
         shader.Dispatch(width, height, depth)
+
+        ' Generate mip maps
+        GL.GenerateMipmap(GenerateMipmapTarget.Texture3D)
 
         Return noise
     End Function

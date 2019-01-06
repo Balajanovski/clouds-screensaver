@@ -3,6 +3,7 @@
 out vec4 out_color;
   
 in vec2 TexCoords;
+in vec3 vPos;
 
 uniform sampler2D hdrBuffer;
 
