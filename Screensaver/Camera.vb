@@ -36,6 +36,14 @@ Public Class Camera
         End Get
     End Property
 
+    ' Projection matrix
+    Private projection As Matrix4
+    Public ReadOnly Property ProjectionMatrix() As Matrix4
+        Get
+            Return projection
+        End Get
+    End Property
+
     ' Field of View
     Private fieldOfView As Single
     Public ReadOnly Property FOV() As Single
@@ -44,11 +52,17 @@ Public Class Camera
         End Get
     End Property
 
-    Public Sub New(newPos As Vector3, lookAtTarget As Vector3, Optional newFov As Single = 45.0F)
+    Public Sub New(newPos As Vector3,
+                   lookAtTarget As Vector3,
+                   screenWidth As Single,
+                   screenHeight As Single,
+                   Optional newFov As Single = 45.0F)
         lookAt = lookAtTarget
         pos = newPos
         fieldOfView = newFov
 
         view = Matrix4.LookAt(pos, lookAt, New Vector3(0.0, 1.0, 0.0))
+        projection = Matrix4.CreatePerspectiveFieldOfView(CType(Math.PI, Single) * (fieldOfView / 180.0),
+                                                          screenWidth / screenHeight, 0.2, 256.0)
     End Sub
 End Class

@@ -44,7 +44,9 @@ Public Class Screensaver
         GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha)
 
         screenQuadRenderer = New ScreenQuadRenderer()
-        camera = New Camera(New Vector3(0.0, 1500000.0, 0.0), New Vector3(0.0, 0.0, 0.0))
+        camera = New Camera(New Vector3(0.0, (6371000.0), 0.0),
+                            New Vector3(1.0, (6371000.0), 0.0),
+                            DisplayDevice.Default.Width, DisplayDevice.Default.Height)
         scatteringComponent = New ScatteringComponent("ScreenQuadRenderer.vert", "scattering.frag", screenQuadRenderer, camera)
         volumetricComponent = New VolumetricComponent("ScreenQuadRenderer.vert", "volumetric.frag", screenQuadRenderer, camera)
         hdrComponent = New HDRComponent("ScreenQuadRenderer.vert", "hdr.frag", -0.8, screenQuadRenderer)

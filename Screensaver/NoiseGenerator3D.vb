@@ -24,9 +24,6 @@ Public Class NoiseGenerator3D
         shader.Use()
         shader.Dispatch(width, height, depth)
 
-        ' Generate mip maps
-        GL.GenerateMipmap(GenerateMipmapTarget.Texture3D)
-
         Return noise
     End Function
 
