@@ -27,14 +27,14 @@ uniform sampler2D curlNoise;
 #define FOV (fov/180*M_PI)
 
 // Raymarching constants
-#define MAX_STEPS 32.0
+#define MAX_STEPS 64.0
 #define LIGHT_RAY_ITERATIONS 6
 #define RCP_LIGHT_RAY_ITERATIONS (1.0/float(LIGHT_RAY_ITERATIONS))
 
 // Cloud constants
 const float CLOUDS_MIN_TRANSMITTANCE = 1e-1;
 const float CLOUDS_TRANSMITTANCE_THRESHOLD = 1.0 - CLOUDS_MIN_TRANSMITTANCE;
-const float EARTH_RADIUS = (6371000.0);
+const float EARTH_RADIUS = (700000.0);
 const float SPHERE_INNER_RADIUS = (EARTH_RADIUS + 5000.0);
 const float SPHERE_OUTER_RADIUS = (SPHERE_INNER_RADIUS + 17000.0);
 const float SPHERE_DELTA = float(SPHERE_OUTER_RADIUS - SPHERE_INNER_RADIUS);
@@ -85,7 +85,7 @@ vec4 worley(in vec3 pos) {
 // Curl noise for whisps in clouds
 // Idea sourced from GPU Pro 7
 vec4 curl(in vec2 pos) {
-	return texture(curlNoise, pos*0.001);
+	return texture(curlNoise, pos);
 }
 
 // Sample from weather texture
@@ -113,7 +113,7 @@ float getDensityForCloudType(in float heightFrac, in float cloudType) {
 // fractional value for sample position in the cloud layer
 // get global fractional position in cloud zone
 float getHeightFraction(vec3 pos){
-	return clamp((length(pos - sphereCenter) - SPHERE_INNER_RADIUS)/(SPHERE_OUTER_RADIUS - SPHERE_INNER_RADIUS), 0.0, 1.0);
+	return(length(pos - sphereCenter) - SPHERE_INNER_RADIUS)/SPHERE_DELTA;
 }
 
 // ---------------------
@@ -136,14 +136,16 @@ float getCloudType(in vec3 weatherData) {
 // Cloud density algorithm follows GPU Pro 7 Article's Idea
 // Help with implementation sourced from: https://www.gamedev.net/forums/topic/680832-horizonzero-dawn-cloud-system/?page=6
 float sampleCloudDensity(in vec3 pos, in float heightFrac, in bool highQuality) {
-	pos.x += time*20.0;
+	vec3 animation = heightFrac * windDirection * CLOUD_TOP_OFFSET + windDirection * time * CLOUD_SPEED;
+	vec2 uv = getUVProjection(pos);
+	vec2 movingUV = getUVProjection(pos + animation);
 
 	if(heightFrac < 0.0 || heightFrac > 1.0) {
 		return 0.0;
 	}
 	
 	// Fluffy cloud shapes achieved with Perlin-Worley Noise
-	vec4 lowFreqNoise = sampleCloudTex(pos);
+	vec4 lowFreqNoise = sampleCloudTex(vec3(uv*CLOUD_SCALE, heightFrac));
 	float lowFreqFBM = dot(lowFreqNoise.gba, vec3(0.625, 0.25, 0.125));
 
 	float baseCloud = remap(
@@ -153,10 +155,10 @@ float sampleCloudDensity(in vec3 pos, in float heightFrac, in bool highQuality) 
 
 	vec3 weatherData = weather(pos.xz).rgb;
 
-	float density = getDensityForCloudType(heightFrac, getCloudType(weatherData));
+	float density = getDensityForCloudType(heightFrac, 1.0);
 	baseCloud *= (density / heightFrac);
 
-	float cloudCoverage = getCoverage(weatherData) * coverageMultiplier;
+	float cloudCoverage = getCoverage(weatherData);
 	float baseCloudWithCoverage = remap(
 		baseCloud,
 		cloudCoverage, 1.0,
@@ -165,14 +167,14 @@ float sampleCloudDensity(in vec3 pos, in float heightFrac, in bool highQuality) 
 
 	if (highQuality) {
 		// Add curl noise (whisps in the clouds)
-		vec2 whisp = curl(pos.xy).xy;
+		vec2 whisp = curl(vec2(movingUV*CLOUD_SCALE)*0.1).xy;
 		pos.xy += whisp * 400.0 * (1.0 - heightFrac);
 
 		// Erode the clouds to add detail using worley noise
-		vec3 highFreqNoise = worley(pos).rgb;
-		float highFreqFBM = dot(highFreqNoise.rgb, vec3(0.625, 0.25, 0.125));
+		vec3 highFreqErosionNoise = worley(vec3(movingUV*CLOUD_SCALE, heightFrac)*0.1).rgb;
+		float highFreqErosionFBM = dot(highFreqErosionNoise.rgb, vec3(0.625, 0.25, 0.125));
 
-		float highFreqNoiseModifier = mix(highFreqFBM, 1.0 - highFreqFBM, clamp(heightFrac * 10.0, 0.0, 1.0));
+		float highFreqNoiseModifier = mix(highFreqErosionFBM, 1.0 - highFreqErosionFBM, clamp(heightFrac * 10.0, 0.0, 1.0));
 
 		baseCloudWithCoverage = baseCloudWithCoverage - highFreqNoiseModifier * (1.0 - baseCloudWithCoverage);
 
@@ -255,12 +257,23 @@ float lightScattering(in float lightDotEye) {
 			   clamp(lightDotEye*0.5 + 0.5, 0.0, 1.0));
 }
 
+#define BAYER_FACTOR 1.0/16.0
+const float bayerFilter[16u] = float[]
+(
+	0.0*BAYER_FACTOR, 8.0*BAYER_FACTOR, 2.0*BAYER_FACTOR, 10.0*BAYER_FACTOR,
+	12.0*BAYER_FACTOR, 4.0*BAYER_FACTOR, 14.0*BAYER_FACTOR, 6.0*BAYER_FACTOR,
+	3.0*BAYER_FACTOR, 11.0*BAYER_FACTOR, 1.0*BAYER_FACTOR, 9.0*BAYER_FACTOR,
+	15.0*BAYER_FACTOR, 7.0*BAYER_FACTOR, 13.0*BAYER_FACTOR, 5.0*BAYER_FACTOR
+);
+
 // Volumetric raymarching algorithm
-vec4 volumetricRaymarch(in vec3 startRay, in vec3 endRay,in vec3 rayDir, in float stepSize, in vec2 t, in vec2 dt, in vec2 wt) {
+vec4 volumetricRaymarch(in vec3 startRay, in vec3 endRay, in vec3 rayDir, in float stepSize, in vec2 t, in vec2 dt, in vec2 wt) {
 	vec4 accumulation = vec4(0.0);
 
-	float thickness = length(endRay - startRay);
-	float rcpThickness = 1.0 / thickness;
+	int a = int(fragCoord.x) % 4;
+	int b = int(fragCoord.y) % 4;
+	startRay += rayDir * bayerFilter[a * 4 + b];
+
 	float lightDotEye = dot(normalize(sunDir), normalize(rayDir));
 	const float absorption = 0.01;
 	float sigmaDS = -stepSize * absorption;
@@ -274,6 +287,7 @@ vec4 volumetricRaymarch(in vec3 startRay, in vec3 endRay,in vec3 rayDir, in floa
 		vec3 pos = startRay + data.x * rayDir;
 		float w = data.y;
 		t += data.zw;
+		//vec3 pos = startRay + rayDir * i * stepSize;
 
 		float heightFrac = getHeightFraction(pos);
 		float cloudDensity = sampleCloudDensity(pos, heightFrac, true);
@@ -292,7 +306,7 @@ vec4 volumetricRaymarch(in vec3 startRay, in vec3 endRay,in vec3 rayDir, in floa
 			float deltaTrans = exp(cloudDensity * sigmaDS);
 			vec3 sourceIntegral = (source - source * deltaTrans) * (1.0 / cloudDensity);
 
-			accumulation.rgb = transmittance * sourceIntegral;
+			accumulation.rgb += transmittance * sourceIntegral;
 			transmittance *= deltaTrans;
 	
 			if(transmittance <= CLOUDS_MIN_TRANSMITTANCE) {
