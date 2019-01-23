@@ -43,7 +43,7 @@ const vec3 windDirection = vec3(0, 0, -1);
 const float CLOUD_SPEED = 100.0;
 const float CLOUD_TOP_OFFSET = 750.0;
 const float CLOUD_SCALE = 40.0;
-const float coverageMultiplier = 0.4;
+const float coverageMultiplier = 0.6;
 const vec3 CLOUDS_AMBIENT_COLOR_TOP = (vec3(169.0, 149.0, 149.0)*(1.5/255.0));
 const vec3 CLOUDS_AMBIENT_COLOR_BOTTOM = (vec3(65.0, 70.0, 80.0)*(1.5/255.0));
 const float WEATHER_SCALE = 0.0000008;
@@ -79,7 +79,7 @@ vec4 sampleCloudTex(in vec3 pos) {
 // Worley noise to add detail to the clouds
 // Idea sourced from GPU Pro 7
 vec4 worley(in vec3 pos) {
-	return texture(worleyNoise, pos);
+	return texture(worleyNoise, pos) * 0.1;
 }
 
 // Curl noise for whisps in clouds
@@ -121,7 +121,7 @@ float getHeightFraction(vec3 pos){
 // ---------------------
 
 float getCoverage(in vec3 weatherData) {
-	return weatherData.r;
+	return smoothstep(0.0, 0.4, weatherData.r);
 }
 
 float getPrecipitation(in vec3 weatherData) {
@@ -153,9 +153,9 @@ float sampleCloudDensity(in vec3 pos, in float heightFrac, in bool highQuality) 
 		-(1.0 - lowFreqFBM), 1.0,
 		0.0, 1.0);
 
-	vec3 weatherData = weather(pos.xz).rgb;
+	vec3 weatherData = weather(pos.xz).rgb * coverageMultiplier;
 
-	float density = getDensityForCloudType(heightFrac, 1.0);
+	float density = getDensityForCloudType(heightFrac, 0.5);
 	baseCloud *= (density / heightFrac);
 
 	float cloudCoverage = getCoverage(weatherData);
@@ -171,7 +171,7 @@ float sampleCloudDensity(in vec3 pos, in float heightFrac, in bool highQuality) 
 		pos.xy += whisp * 400.0 * (1.0 - heightFrac);
 
 		// Erode the clouds to add detail using worley noise
-		vec3 highFreqErosionNoise = worley(vec3(movingUV*CLOUD_SCALE, heightFrac)*0.1).rgb;
+		vec3 highFreqErosionNoise = worley(vec3(movingUV*CLOUD_SCALE, heightFrac)).rgb;
 		float highFreqErosionFBM = dot(highFreqErosionNoise.rgb, vec3(0.625, 0.25, 0.125));
 
 		float highFreqNoiseModifier = mix(highFreqErosionFBM, 1.0 - highFreqErosionFBM, clamp(heightFrac * 10.0, 0.0, 1.0));
@@ -204,8 +204,6 @@ float henyeyGreenstein(float lightDotEye, float g) {
 	return ((1.0 - g2) / pow((1.0 + g2 - 2.0 * g * lightDotEye), 1.5)) * 0.25;
 }
 
-// Determine amount of light which reaches a point in the cloud by raymarching through a cone
-// Implementation help sourced from: https://github.com/fede-vaccaro/TerrainEngine-OpenGL/blob/master/shaders/volumetric_clouds.frag
 // Determine amount of light which reaches a point in the cloud by raymarching through a cone
 // Implementation help sourced from: https://github.com/fede-vaccaro/TerrainEngine-OpenGL/blob/master/shaders/volumetric_clouds.frag
 float sampleCloudDensityAlongCone(in vec3 startPos, in float stepSize, in float lightDotEye, in float originalDensity) {
@@ -282,15 +280,18 @@ vec4 volumetricRaymarch(in vec3 startRay, in vec3 endRay, in vec3 rayDir, in flo
 
 	// Integrate over the volume texture to determine transmittance
 	for (int i = 0; i < MAX_STEPS; ++i) {
+
 		// Snap next sample to view aligned plane
 		vec4 data = t.x < t.y ? vec4( t.x, wt.x, dt.x, 0.0 ) : vec4( t.y, wt.y, 0.0, dt.y );
 		vec3 pos = startRay + data.x * rayDir;
 		float w = data.y;
 		t += data.zw;
-		//vec3 pos = startRay + rayDir * i * stepSize;
 
+		// Get height fraction and cloud density
 		float heightFrac = getHeightFraction(pos);
 		float cloudDensity = sampleCloudDensity(pos, heightFrac, true);
+
+		// If the density is above 0 calculate lighting
 		if (cloudDensity > 0.0 + EPSILON) {
 			float scattering = lightScattering(lightDotEye);
 			float lightDensity = sampleCloudDensityAlongCone(
