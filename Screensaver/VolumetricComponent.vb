@@ -5,6 +5,8 @@ Public Class VolumetricComponent
     Private volumetricShader As Shader
     Private quadRenderer As ScreenQuadRenderer
     Private camera As Camera
+    Private earth As EarthManager
+    Private sun As SunManager
 
     ' Generates noises
     Private perlinWorleyNoiseGen As NoiseGenerator3D
@@ -18,10 +20,12 @@ Public Class VolumetricComponent
     Private perlinNoise As Integer
     Private curlNoise As Integer
 
-    Public Sub New(vertexSrc As String, fragSrc As String, ByRef quadRen As ScreenQuadRenderer, ByRef cam As Camera)
+    Public Sub New(vertexSrc As String, fragSrc As String, ByRef quadRen As ScreenQuadRenderer, ByRef cam As Camera, ByRef earthManager As EarthManager, ByRef sunManager As SunManager)
         volumetricShader = New Shader(vertexSrc, fragSrc)
         quadRenderer = quadRen
         camera = cam
+        earth = earthManager
+        sun = sunManager
 
         perlinWorleyNoiseGen = New NoiseGenerator3D("Generate3DPerlinWorleyNoise.comp")
         worleyNoiseGen = New NoiseGenerator3D("Generate3DWorleyNoise.comp")
@@ -48,7 +52,11 @@ Public Class VolumetricComponent
         volumetricShader.SetVec3("cameraPos", camera.Position)
         volumetricShader.SetMat4("inverseView", False, Matrix4.Invert(camera.ViewMatrix))
         volumetricShader.SetMat4("inverseProjection", False, Matrix4.Invert(camera.ProjectionMatrix))
-        volumetricShader.SetFloat("fov", camera.FOV)
+        volumetricShader.SetVec3("sunColor", sun.color)
+        volumetricShader.SetVec3("sunDir", sun.lightDir)
+        volumetricShader.SetFloat("EARTH_RADIUS", earth.radius)
+
+
         volumetricShader.SetInt("cloudNoise", 1)
         volumetricShader.SetInt("weatherTexture", 2)
         volumetricShader.SetInt("curlNoise", 3)

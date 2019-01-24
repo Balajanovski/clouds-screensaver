@@ -4,15 +4,16 @@
 
 layout (location = 0) out vec4 out_color;
 
-uniform vec3 sunColor = vec3(1.0);
-uniform vec3 sunDir = normalize(vec3(0.0,-1.0,-1.0));
+uniform vec3 sunColor;
+uniform vec3 sunDir;
+
+uniform float EARTH_RADIUS;
 
 uniform float time;
 uniform vec2 resolution;
 uniform vec3 cameraPos;
 uniform mat4 inverseView;
 uniform mat4 inverseProjection;
-uniform float fov = 45.0;
 
 uniform sampler3D cloudNoise;
 uniform sampler3D worleyNoise;
@@ -23,9 +24,6 @@ uniform sampler2D curlNoise;
 #define M_PI 3.1415926535897932384626433832795
 #define EPSILON 0.001
 
-// Field of View in radians
-#define FOV (fov/180*M_PI)
-
 // Raymarching constants
 #define MAX_STEPS 64.0
 #define LIGHT_RAY_ITERATIONS 6
@@ -34,7 +32,6 @@ uniform sampler2D curlNoise;
 // Cloud constants
 const float CLOUDS_MIN_TRANSMITTANCE = 1e-1;
 const float CLOUDS_TRANSMITTANCE_THRESHOLD = 1.0 - CLOUDS_MIN_TRANSMITTANCE;
-const float EARTH_RADIUS = (700000.0);
 const float SPHERE_INNER_RADIUS = (EARTH_RADIUS + 5000.0);
 const float SPHERE_OUTER_RADIUS = (SPHERE_INNER_RADIUS + 17000.0);
 const float SPHERE_DELTA = float(SPHERE_OUTER_RADIUS - SPHERE_INNER_RADIUS);
@@ -73,7 +70,7 @@ vec2 getUVProjection(vec3 p){
 // Perlin-Worley noise for cloud shape and volume
 // Idea sourced from GPU Pro 7
 vec4 sampleCloudTex(in vec3 pos) {
-	return texture(cloudNoise, pos);
+	return texture(cloudNoise, pos) * 0.8;
 }
 
 // Worley noise to add detail to the clouds

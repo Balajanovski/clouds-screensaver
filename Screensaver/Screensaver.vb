@@ -21,6 +21,9 @@ Public Class Screensaver
 
     Private camera As Camera
 
+    Private sun As SunManager
+    Private earth As EarthManager
+
     Private time As Double
 
     Public Sub New()
@@ -43,12 +46,15 @@ Public Class Screensaver
         GL.ClearColor(0.0, 0.0, 0.0, 1.0)
         GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha)
 
+        earth = New EarthManager(700000.0)
+        sun = New SunManager(New Vector3(1.0, 1.0, 1.0), Vector3d.Normalize(New Vector3(0.0, -1.0, -1.0)))
+
         screenQuadRenderer = New ScreenQuadRenderer()
-        camera = New Camera(New Vector3(0.0, (700000.0), 0.0),
-                            New Vector3(1.0, (700000.0), 0.0),
+        camera = New Camera(New Vector3(500.0, (700000.0), 500.0),
+                            New Vector3(0.0, (700000.0), 0.0),
                             DisplayDevice.Default.Width, DisplayDevice.Default.Height)
-        scatteringComponent = New ScatteringComponent("ScreenQuadRenderer.vert", "scattering.frag", screenQuadRenderer, camera)
-        volumetricComponent = New VolumetricComponent("ScreenQuadRenderer.vert", "volumetric.frag", screenQuadRenderer, camera)
+        scatteringComponent = New ScatteringComponent("ScreenQuadRenderer.vert", "scattering.frag", screenQuadRenderer, camera, earth, sun)
+        volumetricComponent = New VolumetricComponent("ScreenQuadRenderer.vert", "volumetric.frag", screenQuadRenderer, camera, earth, sun)
         hdrComponent = New HDRComponent("ScreenQuadRenderer.vert", "hdr.frag", -0.8, screenQuadRenderer)
     End Sub
 

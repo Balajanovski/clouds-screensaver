@@ -4,6 +4,8 @@
 #define iSteps 16
 #define jSteps 8
 
+#define fragCoord (gl_FragCoord.xy)
+
 // Atmospheric scattering shader sourced from:
 // https://github.com/wwwtyro/glsl-atmosphere/blob/master/index.glsl
 
@@ -12,6 +14,14 @@ in vec3 vPos;
 layout (location = 0) out vec4 out_color;
 
 uniform float time;
+uniform vec2 resolution;
+uniform vec3 cameraPos;
+uniform mat4 inverseView;
+uniform mat4 inverseProjection;
+
+uniform vec3 sunColor;
+uniform vec3 sunDir;
+uniform float EARTH_RADIUS;
 
 vec2 rsi(vec3 r0, vec3 rd, float sr) {
     // ray-sphere intersection that assumes
@@ -117,14 +127,25 @@ vec3 atmosphere(vec3 r, vec3 r0, vec3 pSun, float iSun, float rPlanet, float rAt
     return iSun * (pRlh * kRlh * totalRlh + pMie * kMie * totalMie);
 }
 
+vec3 computeClipSpaceCoord(){
+	vec2 ray_nds = 2.0*fragCoord.xy/resolution.xy - 1.0;
+	return vec3(ray_nds, 1.0);
+}
+
 void main() {
+	vec4 rayClip = vec4(computeClipSpaceCoord(), 1.0);
+	vec4 rayView = inverseProjection * rayClip;
+	rayView = vec4(rayView.xy, -1.0, 0.0);
+	vec3 worldDir = (inverseView * rayView).xyz;
+	worldDir = normalize(worldDir);
+
 	vec3 color = atmosphere(
-        normalize(vPos),                // normalized ray direction
-        vec3(0, 6372e3, 0), // ray origin
+        worldDir,                // normalized ray direction
+        cameraPos, // ray origin
         vec3(/*cos(time)*0.5*/ 0.0, /*0.125*sin(time)+0.11*/ 0.25, /*abs(cos(time)*0.125) + 0.125*/ 0.5),            // position of the sun
         22.0,                           // intensity of the sun
-        6371e3,                         // radius of the planet in meters
-        6471e3,                         // radius of the atmosphere in meters
+        EARTH_RADIUS,                         // radius of the planet in meters
+        22000.0,                         // radius of the atmosphere in meters
         vec3(5.5e-6, 13.0e-6, 22.4e-6), // Rayleigh scattering coefficient
         21e-6,                          // Mie scattering coefficient
         8e3,                            // Rayleigh scale height
