@@ -15,12 +15,10 @@ layout (location = 0) out vec4 out_color;
 
 uniform float time;
 uniform vec2 resolution;
-uniform vec3 cameraPos;
 uniform mat4 inverseView;
 uniform mat4 inverseProjection;
-
 uniform vec3 sunColor;
-uniform vec3 sunDir;
+uniform vec3 sunPos;
 uniform float EARTH_RADIUS;
 
 vec2 rsi(vec3 r0, vec3 rd, float sr) {
@@ -124,7 +122,7 @@ vec3 atmosphere(vec3 r, vec3 r0, vec3 pSun, float iSun, float rPlanet, float rAt
     }
 
     // Calculate and return the final color.
-    return iSun * (pRlh * kRlh * totalRlh + pMie * kMie * totalMie);
+    return iSun * (pRlh * kRlh * totalRlh + pMie * kMie * totalMie) * sunColor;
 }
 
 vec3 computeClipSpaceCoord(){
@@ -141,11 +139,11 @@ void main() {
 
 	vec3 color = atmosphere(
         worldDir,                // normalized ray direction
-        cameraPos, // ray origin
-        vec3(/*cos(time)*0.5*/ 0.0, /*0.125*sin(time)+0.11*/ 0.25, /*abs(cos(time)*0.125) + 0.125*/ 0.5),            // position of the sun
+        vec3(0, EARTH_RADIUS, 0), // ray origin
+        sunPos,            // position of the sun
         22.0,                           // intensity of the sun
-        EARTH_RADIUS,                         // radius of the planet in meters
-        22000.0,                         // radius of the atmosphere in meters
+        EARTH_RADIUS,                   // radius of the planet in meters
+        EARTH_RADIUS + 100e3,            // radius of the atmosphere in meters
         vec3(5.5e-6, 13.0e-6, 22.4e-6), // Rayleigh scattering coefficient
         21e-6,                          // Mie scattering coefficient
         8e3,                            // Rayleigh scale height

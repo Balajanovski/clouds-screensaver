@@ -12,19 +12,24 @@ Public Class SunManager
         End Set
     End Property
 
-    Private sunDir As Vector3
-
-    Public Property lightDir As Vector3
+    Public ReadOnly Property lightDir As Vector3
         Get
-            Return sunDir
+            Return Vector3d.Normalize(New Vector3(0.0, 0.0, 0.0) - sunPos)
+        End Get
+    End Property
+
+    Private sunPos As Vector3
+    Public Property position As Vector3
+        Get
+            Return sunPos
         End Get
         Set(value As Vector3)
-            sunDir = value
+            sunPos = value
         End Set
     End Property
 
-    Public Sub New(col As Vector3, lightDirection As Vector3)
+    Public Sub New(col As Vector3, pos As Vector3)
         sunColor = col
-        sunDir = lightDirection
+        sunPos = pos
     End Sub
 End Class

@@ -47,11 +47,11 @@ Public Class Screensaver
         GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha)
 
         earth = New EarthManager(700000.0)
-        sun = New SunManager(New Vector3(1.0, 1.0, 1.0), Vector3d.Normalize(New Vector3(0.0, -1.0, -1.0)))
+        sun = New SunManager(New Vector3(1.0, 1.0, 1.0), Vector3d.Normalize(New Vector3(1.0, 1.0, 0.0)))
 
         screenQuadRenderer = New ScreenQuadRenderer()
-        camera = New Camera(New Vector3(500.0, (700000.0), 500.0),
-                            New Vector3(0.0, (700000.0), 0.0),
+        camera = New Camera(New Vector3(0.0, earth.radius, 0.0),
+                            New Vector3(500.0, earth.radius, 500.0),
                             DisplayDevice.Default.Width, DisplayDevice.Default.Height)
         scatteringComponent = New ScatteringComponent("ScreenQuadRenderer.vert", "scattering.frag", screenQuadRenderer, camera, earth, sun)
         volumetricComponent = New VolumetricComponent("ScreenQuadRenderer.vert", "volumetric.frag", screenQuadRenderer, camera, earth, sun)
@@ -89,10 +89,22 @@ Public Class Screensaver
         End If
     End Sub
 
+    Private Shared Function Clamp(value As Single) As Single
+        If (value > 1.0) Then
+            Return 1.0
+        ElseIf (value < 0.0) Then
+            Return 0.0
+        Else
+            Return value
+        End If
+    End Function
+
     Protected Overrides Sub OnRenderFrame(e As FrameEventArgs)
         MyBase.OnRenderFrame(e)
 
         time += e.Time
+
+        sun.position = New Vector3(Math.Abs(Math.Sin(time)), Math.Sin(2 * time), Math.Abs(Math.Cos(time)))
 
         hdrComponent.Bind()
         GL.Clear(ClearBufferMask.ColorBufferBit Or ClearBufferMask.DepthBufferBit)

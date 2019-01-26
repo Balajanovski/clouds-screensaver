@@ -21,11 +21,10 @@ Public Class ScatteringComponent
         scatteringShader.Use()
         scatteringShader.SetFloat("time", time)
         scatteringShader.SetVec2("resolution", DisplayDevice.Default.Width, DisplayDevice.Default.Height)
-        scatteringShader.SetVec3("cameraPos", camera.Position)
         scatteringShader.SetMat4("inverseView", False, Matrix4.Invert(camera.ViewMatrix))
         scatteringShader.SetMat4("inverseProjection", False, Matrix4.Invert(camera.ProjectionMatrix))
         scatteringShader.SetVec3("sunColor", sun.color)
-        scatteringShader.SetVec3("sunDir", sun.lightDir)
+        scatteringShader.SetVec3("sunPos", sun.position)
         scatteringShader.SetFloat("EARTH_RADIUS", earth.radius)
         quadRenderer.Render()
     End Sub
