@@ -113,7 +113,7 @@ Public Class Screensaver
 
         time += e.Time
 
-        Dim slowedTime As Single = time / 32
+        Dim slowedTime As Single = time / 64
         sun.position = New Vector3(Math.Sin(slowedTime Mod (Math.PI / 2)), Math.Abs(Math.Sin(2 * slowedTime)) - 0.25, Math.Cos(slowedTime Mod (Math.PI / 2)))
         sun.color = Lerp(ORANGE, WHITE, Math.Abs(Math.Sin(2 * slowedTime)))
 

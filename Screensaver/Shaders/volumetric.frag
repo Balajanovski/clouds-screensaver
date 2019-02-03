@@ -38,7 +38,7 @@ uniform int frameIter;
 #define EPSILON 0.001
 
 // Raymarching constants
-#define MAX_STEPS 200.0
+#define MAX_STEPS 255.0
 #define LIGHT_RAY_ITERATIONS 6
 #define RCP_LIGHT_RAY_ITERATIONS (1.0/float(LIGHT_RAY_ITERATIONS))
 
@@ -49,7 +49,7 @@ const float SPHERE_INNER_RADIUS = (EARTH_RADIUS + 5000.0);
 const float SPHERE_OUTER_RADIUS = (SPHERE_INNER_RADIUS + 17000.0);
 const float SPHERE_DELTA = float(SPHERE_OUTER_RADIUS - SPHERE_INNER_RADIUS);
 const vec3 sphereCenter = vec3(0.0, -EARTH_RADIUS, 0.0);
-const vec3 windDirection = vec3(0, 0, -1);
+const vec3 windDirection = vec3(1, 0, 1);
 const float CLOUD_SPEED = 100.0;
 const float CLOUD_TOP_OFFSET = 750.0;
 const float CLOUD_SCALE = 40.0;
@@ -76,10 +76,6 @@ float remap(in float originalValue, in float originalMin, in float originalMax, 
 	return newMin + (((originalValue - originalMin) / (originalMax - originalMin)) * (newMax - newMin));
 }
 
-vec2 getUVProjection(vec3 p){
-	return p.xz/SPHERE_INNER_RADIUS + 0.5;
-}
-
 // Perlin-Worley noise for cloud shape and volume
 // Idea sourced from GPU Pro 7
 vec4 sampleCloudTex(in vec3 pos) {
@@ -101,7 +97,7 @@ vec4 curl(in vec2 pos) {
 // Sample from weather texture
 // Idea of a weather texture sourced from GPU Pro 7 
 vec4 weather(in vec2 pos) {
-	return texture(weatherTexture, pos * WEATHER_SCALE);
+	return texture(weatherTexture, pos);
 }
 
 // Mix density gradients of different cloud types
@@ -143,6 +139,10 @@ float getCloudType(in vec3 weatherData) {
 	return weatherData.b;
 }
 
+vec2 getUVProjection(vec3 p){
+	return p.xz/SPHERE_INNER_RADIUS + 0.5;
+}
+
 // Cloud density algorithm follows GPU Pro 7 Article's Idea
 // Help with implementation sourced from: https://www.gamedev.net/forums/topic/680832-horizonzero-dawn-cloud-system/?page=6
 float sampleCloudDensity(in vec3 pos, in float heightFrac, in bool highQuality) {
@@ -163,7 +163,7 @@ float sampleCloudDensity(in vec3 pos, in float heightFrac, in bool highQuality) 
 		-(1.0 - lowFreqFBM), 1.0,
 		0.0, 1.0);
 
-	vec3 weatherData = weather(pos.xz).rgb * coverageMultiplier;
+	vec3 weatherData = weather(movingUV).rgb * coverageMultiplier;
 
 	float density = getDensityForCloudType(heightFrac, 0.5);
 	baseCloud *= (density / heightFrac);
