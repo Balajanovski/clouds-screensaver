@@ -56,7 +56,7 @@ Public Class Camera
                    lookAtTarget As Vector3,
                    screenWidth As Single,
                    screenHeight As Single,
-                   Optional newFov As Single = 45.0F)
+                   Optional newFov As Single = 60.0F)
         lookAt = lookAtTarget
         pos = newPos
         fieldOfView = newFov

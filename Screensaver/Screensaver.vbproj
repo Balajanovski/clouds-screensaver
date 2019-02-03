@@ -121,6 +121,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="SunManager.vb" />
+    <Compile Include="VolumetricCloudsFrameBuffer.vb" />
     <Compile Include="Util\ComputeShader.vb" />
     <Compile Include="Util\Shader.vb" />
     <Compile Include="Util\ShaderBase.vb" />
@@ -155,6 +156,7 @@
     <EmbeddedResource Include="Shaders\Generate2DCurlNoise.comp" />
     <EmbeddedResource Include="Shaders\Generate3DWorleyNoise.comp" />
     <EmbeddedResource Include="Shaders\Generate3DPerlinWorleyNoise.comp" />
+    <EmbeddedResource Include="Shaders\PostProcessClouds.frag" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />

@@ -32,6 +32,8 @@ Public Class HDRComponent
         GL.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, All.Linear)
         GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
                                 TextureTarget.Texture2D, colorBuffer, 0)
+        Dim attachments() As Integer = {FramebufferAttachment.ColorAttachment0}
+        GL.DrawBuffers(attachments.Length, attachments)
 
         ' Create depth buffer
         rboDepth = GL.GenRenderbuffer()

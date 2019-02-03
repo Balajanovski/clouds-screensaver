@@ -14,7 +14,7 @@ Public Class SunManager
 
     Public ReadOnly Property lightDir As Vector3
         Get
-            Return Vector3d.Normalize(New Vector3(0.0, 0.0, 0.0) - sunPos)
+            Return Vector3d.Normalize(sunPos - New Vector3(0, 0, 0))
         End Get
     End Property
 

@@ -3,6 +3,8 @@
 #define fragCoord (gl_FragCoord.xy)
 
 layout (location = 0) out vec4 out_color;
+layout (location = 1) out vec4 cloudColor;
+layout (location = 2) out vec4 alphaness;
 
 uniform vec3 sunColor;
 uniform vec3 sunDir;
@@ -12,20 +14,31 @@ uniform float EARTH_RADIUS;
 uniform float time;
 uniform vec2 resolution;
 uniform vec3 cameraPos;
+
 uniform mat4 inverseView;
 uniform mat4 inverseProjection;
+uniform mat4 inverseViewProjection;
+uniform mat4 oldViewProjection;
 
+// Assortment of different noises for cloud volumes
 uniform sampler3D cloudNoise;
 uniform sampler3D worleyNoise;
 uniform sampler2D weatherTexture;
 uniform sampler2D curlNoise;
+
+// Previous frame for temporal reprojection
+uniform sampler2D lastFrame;
+uniform sampler2D lastFrameAlphaness;
+
+// Frame iteration counter for temporal reprojection mod 16
+uniform int frameIter;
 
 // Math constants
 #define M_PI 3.1415926535897932384626433832795
 #define EPSILON 0.001
 
 // Raymarching constants
-#define MAX_STEPS 64.0
+#define MAX_STEPS 200.0
 #define LIGHT_RAY_ITERATIONS 6
 #define RCP_LIGHT_RAY_ITERATIONS (1.0/float(LIGHT_RAY_ITERATIONS))
 
@@ -247,8 +260,8 @@ vec3 ambientLight(float heightFrac) {
 }
 
 float lightScattering(in float lightDotEye) {
-	return mix(henyeyGreenstein(lightDotEye, -0.08),
-			   henyeyGreenstein(lightDotEye, 0.08),
+	return mix(henyeyGreenstein(lightDotEye, -0.2),
+			   henyeyGreenstein(lightDotEye, 0.2),
 			   clamp(lightDotEye*0.5 + 0.5, 0.0, 1.0));
 }
 
@@ -368,34 +381,103 @@ float raySphereIntersection(in vec3 pos, in vec3 dir, in float r) {
     return max(p, p2)/(2.0*a);
 }
 
+float computeFogAmount(in vec3 startPos, in float factor){
+	float dist = length(startPos - cameraPos);
+	float radius = (cameraPos.y - sphereCenter.y) * 0.3;
+	float alpha = (dist / radius);
+
+	return (1.0 - exp(-dist*alpha*factor));
+}
+
 vec3 computeClipSpaceCoord(){
 	vec2 ray_nds = 2.0*fragCoord.xy/resolution.xy - 1.0;
 	return vec3(ray_nds, 1.0);
 }
 
+vec2 computeScreenPos(vec2 ndc){
+	return (ndc*0.5 + 0.5);
+}
+
+const int bayerMatrix16[16] = int[]
+(
+	0, 8, 2, 10,
+	12, 4, 14, 6,
+	3, 11, 1, 9,
+	15, 7, 13, 5
+);
+
+bool writePixel() {
+	int index = bayerMatrix16[frameIter];
+	ivec2 icoord = ivec2(fragCoord.xy);
+    return ((icoord.x + 4*icoord.y) % 16 == index);
+}
+
+float threshold(float v, float t) {
+	return v > t ? v : 0.0;
+}
+
 void main() {
+	// Compute Ray Direction
 	vec4 rayClip = vec4(computeClipSpaceCoord(), 1.0);
 	vec4 rayView = inverseProjection * rayClip;
 	rayView = vec4(rayView.xy, -1.0, 0.0);
 	vec3 worldDir = (inverseView * rayView).xyz;
 	worldDir = normalize(worldDir);
 
+	// For picking previous frame color -- temporal projection
+	vec4 camToWorldPos = inverseViewProjection * rayClip;
+	camToWorldPos /= camToWorldPos.w;
+	vec4 pPrime = oldViewProjection * camToWorldPos;
+	pPrime /= pPrime.w;
+	vec2 prevFrameScreenPos = computeScreenPos(pPrime.xy); 
+	bool isOut = any(greaterThan(abs(prevFrameScreenPos - 0.5) , vec2(0.5)));
+
 	//compute raymarching starting and ending point by intersecting with spheres
 	vec3 startPos, endPos;
 	startPos = worldDir * raySphereIntersection(cameraPos, worldDir, SPHERE_INNER_RADIUS);
 	endPos = worldDir * raySphereIntersection(cameraPos, worldDir, SPHERE_OUTER_RADIUS);
 
-	float stepSize = length(endPos - startPos) / MAX_STEPS;
+	// Compute fog amount -- early exit if fog is too large
+	float fogAmount = computeFogAmount(cameraPos + startPos, 0.00002);
+	if (fogAmount > 0.500) {
+		out_color = vec4(0.0, 0.0, 0.0, 0.0);
+		cloudColor = vec4(0.0, 0.0, 0.0, 0.0);
+		alphaness = vec4(0.0, 0.0, 0.0, 1.0);
+		return;
+	}
 
-	vec2 t, dt, wt;
-	planeAlignment(startPos, worldDir, stepSize, t, dt, wt);
+	// Early exit -- search for low alphaness areas
+	float oldFrameAlpha = 1.0;
+	vec4 oldFrameTexel = texture(lastFrame, prevFrameScreenPos);
 
-	vec4 color = volumetricRaymarch(startPos, endPos, worldDir, stepSize, t, dt, wt);
+	if (!isOut) {
+		oldFrameAlpha = texture(lastFrameAlphaness, prevFrameScreenPos).r;
+	}
+
+	// If the pixel must be recalculated
+	vec4 color = vec4(0.0);
+	if ((oldFrameAlpha >= 0.0 || frameIter == 0) && (writePixel() || isOut)) {
+		// Raymarch
+		float stepSize = length(endPos - startPos) / MAX_STEPS;
+		vec2 t, dt, wt;
+		planeAlignment(startPos, worldDir, stepSize, t, dt, wt);
+		color = volumetricRaymarch(startPos, endPos, worldDir, stepSize, t, dt, wt);
+		cloudColor = color; // Output untampered with cloud color to texture
+	} else {
+		// Temporal reprojection
+		color = texture(lastFrame, computeScreenPos(computeClipSpaceCoord().xy));
+		cloudColor = color; // Output untampered with cloud color to texture
+	}
+
+	color.rgb = color.rgb*1.8 - 0.1; // Constrast-illumination tuning
+
+	float cloudAlphaness = threshold(color.a, 0.2);
+	alphaness = vec4(cloudAlphaness, 0.0, 0.0, 1.0); // Output cloud alphaness to texture
 
 	// add sun glare to clouds
 	float sun = clamp( dot(sunDir,normalize(endPos - startPos)), 0.0, 1.0 );
-	vec3 s = 0.8*vec3(1.0,0.4,0.2)*pow( sun, 256.0 );
+	vec3 s = 0.8 * vec3(1.0,0.4,0.2) * pow(sun, 256.0);
 	color.rgb += s * color.a;
 
-	out_color = color;
+	out_color = color; // Output fragment color to screen
 }

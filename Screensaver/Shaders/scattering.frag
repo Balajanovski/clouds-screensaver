@@ -141,7 +141,7 @@ void main() {
         worldDir,                // normalized ray direction
         vec3(0, EARTH_RADIUS, 0), // ray origin
         sunPos,            // position of the sun
-        22.0,                           // intensity of the sun
+        12.0,                           // intensity of the sun
         EARTH_RADIUS,                   // radius of the planet in meters
         EARTH_RADIUS + 100e3,            // radius of the atmosphere in meters
         vec3(5.5e-6, 13.0e-6, 22.4e-6), // Rayleigh scattering coefficient

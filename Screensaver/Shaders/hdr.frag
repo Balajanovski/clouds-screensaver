@@ -9,8 +9,7 @@ uniform sampler2D hdrBuffer;
 
 uniform float exposure;
 
-void main()
-{             
+void main() {             
     const float gamma = 1.8;
     vec3 hdrColor = texture(hdrBuffer, TexCoords).rgb;
   
