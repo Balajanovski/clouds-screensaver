@@ -16,6 +16,9 @@ Public Class Screensaver
     ' Volumetric cloud raymarching
     Private volumetricComponent As VolumetricComponent
 
+    ' Rasteurized randomly generated terrain
+    Private terrainComponent As TerrainComponent
+
     ' High Dynamic Range
     Private hdrComponent As HDRComponent
 
@@ -57,7 +60,9 @@ Public Class Screensaver
                             DisplayDevice.Default.Width, DisplayDevice.Default.Height)
         scatteringComponent = New ScatteringComponent("ScreenQuadRenderer.vert", "scattering.frag", screenQuadRenderer, camera, earth, sun)
         volumetricComponent = New VolumetricComponent("ScreenQuadRenderer.vert", "volumetric.frag", screenQuadRenderer, camera, earth, sun)
+        terrainComponent = New TerrainComponent(1000, 1000, 1, 1, camera)
         hdrComponent = New HDRComponent("ScreenQuadRenderer.vert", "hdr.frag", -0.8, screenQuadRenderer)
+
     End Sub
 
     Protected Overrides Sub OnResize(e As EventArgs)
@@ -101,6 +106,7 @@ Public Class Screensaver
         End If
     End Function
 
+    ' RGB Colors
     Private ReadOnly WHITE As New Vector3(1.0, 1.0, 1.0)
     Private ReadOnly ORANGE As New Vector3(1.0, 0.647, 0.0)
     Private ReadOnly GRAYISH_BLACK As New Vector3(0.05, 0.05, 0.05)

@@ -302,7 +302,7 @@ vec4 volumetricRaymarch(in vec3 startRay, in vec3 endRay, in vec3 rayDir, in flo
 		float cloudDensity = sampleCloudDensity(pos, heightFrac, true);
 
 		// If the density is above 0 calculate lighting
-		if (cloudDensity > 0.0) {
+		if (cloudDensity > 0.0 + EPSILON) {
 			float scattering = lightScattering(lightDotEye);
 			float lightDensity = sampleCloudDensityAlongCone(
 				pos,
@@ -463,10 +463,12 @@ void main() {
 		planeAlignment(startPos, worldDir, stepSize, t, dt, wt);
 		color = volumetricRaymarch(startPos, endPos, worldDir, stepSize, t, dt, wt);
 		cloudColor = color; // Output untampered with cloud color to texture
+							// for temporal reprojection
 	} else {
 		// Temporal reprojection
 		color = texture(lastFrame, computeScreenPos(computeClipSpaceCoord().xy));
 		cloudColor = color; // Output untampered with cloud color to texture
+							// for temporal reprojection
 	}
 
 	color.rgb = color.rgb*1.8 - 0.1; // Constrast-illumination tuning

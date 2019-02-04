@@ -1,11 +1,11 @@
 ﻿Imports OpenTK.Graphics.OpenGL4
 
 Public Class NoiseGenerator3D
-    Private shader As ComputeShader
+    Inherits NoiseGeneratorBase
 
     ' Uses compute shader
     Public Sub New(shaderSrc As String)
-        shader = New ComputeShader(shaderSrc)
+        MyBase.New(shaderSrc)
     End Sub
 
     Public Function GenerateNoise(width As Integer, height As Integer, depth As Integer, format As SizedInternalFormat) As Integer
@@ -26,11 +26,4 @@ Public Class NoiseGenerator3D
 
         Return noise
     End Function
-
-    Public Sub AwaitComputationEnd()
-        ' Wait for computation to finish
-        GL.MemoryBarrier(MemoryBarrierFlags.ShaderImageAccessBarrierBit)
-        GL.MemoryBarrier(MemoryBarrierFlags.ShaderStorageBarrierBit)
-        GL.MemoryBarrier(MemoryBarrierFlags.TextureFetchBarrierBit)
-    End Sub
 End Class

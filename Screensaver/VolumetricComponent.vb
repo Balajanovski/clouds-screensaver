@@ -20,13 +20,13 @@ Public Class VolumetricComponent
     ' Generates noises
     Private perlinWorleyNoiseGen As NoiseGenerator3D
     Private worleyNoiseGen As NoiseGenerator3D
-    Private perlinNoiseGen As NoiseGenerator2D
+    Private weatherNoiseGen As NoiseGenerator2D
     Private curlNoiseGen As NoiseGenerator2D
 
     ' Noise cache
     Private perlinWorleyNoise As Integer
     Private worleyNoise As Integer
-    Private perlinNoise As Integer
+    Private weatherNoise As Integer
     Private curlNoise As Integer
 
     Public Sub New(vertexSrc As String,
@@ -46,15 +46,22 @@ Public Class VolumetricComponent
 
         perlinWorleyNoiseGen = New NoiseGenerator3D("Generate3DPerlinWorleyNoise.comp")
         worleyNoiseGen = New NoiseGenerator3D("Generate3DWorleyNoise.comp")
-        perlinNoiseGen = New NoiseGenerator2D("GenerateWeatherTexture.comp")
+        weatherNoiseGen = New NoiseGenerator2D("GenerateWeatherTexture.comp")
         curlNoiseGen = New NoiseGenerator2D("Generate2DCurlNoise.comp")
+
         perlinWorleyNoise = perlinWorleyNoiseGen.GenerateNoise(128, 128, 128, SizedInternalFormat.Rgba8)
-        perlinWorleyNoiseGen.AwaitComputationEnd()
+
         worleyNoise = worleyNoiseGen.GenerateNoise(32, 32, 32, SizedInternalFormat.Rgba8)
-        worleyNoiseGen.AwaitComputationEnd()
-        perlinNoise = perlinNoiseGen.GenerateNoise(1024, 1024, SizedInternalFormat.Rgba8)
-        perlinNoiseGen.AwaitComputationEnd()
+
+        weatherNoiseGen.Seed(RandomFloatGenerator.instance().NextFloat())
+        weatherNoise = weatherNoiseGen.GenerateNoise(1024, 1024, SizedInternalFormat.Rgba8)
+
         curlNoise = curlNoiseGen.GenerateNoise(128, 128, SizedInternalFormat.Rgba8)
+
+
+        perlinWorleyNoiseGen.AwaitComputationEnd()
+        worleyNoiseGen.AwaitComputationEnd()
+        weatherNoiseGen.AwaitComputationEnd()
         curlNoiseGen.AwaitComputationEnd()
 
         volumetricShader.Use()
@@ -98,7 +105,7 @@ Public Class VolumetricComponent
         GL.ActiveTexture(TextureUnit.Texture1)
         GL.BindTexture(TextureTarget.Texture3D, perlinWorleyNoise)
         GL.ActiveTexture(TextureUnit.Texture2)
-        GL.BindTexture(TextureTarget.Texture2D, perlinNoise)
+        GL.BindTexture(TextureTarget.Texture2D, weatherNoise)
         GL.ActiveTexture(TextureUnit.Texture3)
         GL.BindTexture(TextureTarget.Texture2D, curlNoise)
         GL.ActiveTexture(TextureUnit.Texture4)

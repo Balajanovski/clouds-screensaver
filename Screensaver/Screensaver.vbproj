@@ -99,8 +99,10 @@
     <Compile Include="Camera.vb" />
     <Compile Include="EarthManager.vb" />
     <Compile Include="HDRComponent.vb" />
-    <Compile Include="NoiseGenerator2D.vb" />
-    <Compile Include="NoiseGenerator3D.vb" />
+    <Compile Include="Util\NoiseGenerator2D.vb" />
+    <Compile Include="Util\NoiseGenerator3D.vb" />
+    <Compile Include="Util\NoiseGeneratorBase.vb" />
+    <Compile Include="RandomFloatGenerator.vb" />
     <Compile Include="ScatteringComponent.vb" />
     <Compile Include="ScreenQuadRenderer.vb" />
     <Compile Include="Screensaver.vb" />
@@ -121,6 +123,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="SunManager.vb" />
+    <Compile Include="TerrainComponent.vb" />
     <Compile Include="VolumetricCloudsFrameBuffer.vb" />
     <Compile Include="Util\ComputeShader.vb" />
     <Compile Include="Util\Shader.vb" />
@@ -157,6 +160,7 @@
     <EmbeddedResource Include="Shaders\Generate3DWorleyNoise.comp" />
     <EmbeddedResource Include="Shaders\Generate3DPerlinWorleyNoise.comp" />
     <EmbeddedResource Include="Shaders\PostProcessClouds.frag" />
+    <EmbeddedResource Include="Shaders\GenerateTerrainNoise.comp" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
