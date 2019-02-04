@@ -254,8 +254,8 @@ float sampleCloudDensityAlongCone(in vec3 startPos, in float stepSize, in float 
 
 vec3 ambientLight(float heightFrac) {
 	return mix(
-		CLOUDS_AMBIENT_COLOR_BOTTOM,
-		CLOUDS_AMBIENT_COLOR_TOP,
+		CLOUDS_AMBIENT_COLOR_BOTTOM * sunColor,
+		CLOUDS_AMBIENT_COLOR_TOP * sunColor,
 		heightFrac);
 }
 
@@ -302,7 +302,7 @@ vec4 volumetricRaymarch(in vec3 startRay, in vec3 endRay, in vec3 rayDir, in flo
 		float cloudDensity = sampleCloudDensity(pos, heightFrac, true);
 
 		// If the density is above 0 calculate lighting
-		if (cloudDensity > 0.0 + EPSILON) {
+		if (cloudDensity > 0.0) {
 			float scattering = lightScattering(lightDotEye);
 			float lightDensity = sampleCloudDensityAlongCone(
 				pos,

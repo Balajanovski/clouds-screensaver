@@ -103,6 +103,7 @@ Public Class Screensaver
 
     Private ReadOnly WHITE As New Vector3(1.0, 1.0, 1.0)
     Private ReadOnly ORANGE As New Vector3(1.0, 0.647, 0.0)
+    Private ReadOnly GRAYISH_BLACK As New Vector3(0.05, 0.05, 0.05)
 
     Private Shared Function Lerp(v1 As Vector3, v2 As Vector3, t As Single) As Vector3
         Return v1 + t * (v2 - v1)
@@ -114,8 +115,14 @@ Public Class Screensaver
         time += e.Time
 
         Dim slowedTime As Single = time / 64
-        sun.position = New Vector3(Math.Sin(slowedTime Mod (Math.PI / 2)), Math.Abs(Math.Sin(2 * slowedTime)) - 0.25, Math.Cos(slowedTime Mod (Math.PI / 2)))
-        sun.color = Lerp(ORANGE, WHITE, Math.Abs(Math.Sin(2 * slowedTime)))
+        Dim sunYPos As Single = Math.Abs(Math.Sin(2 * slowedTime))
+        sun.position = New Vector3(Math.Sin(slowedTime Mod (Math.PI / 2)), sunYPos - 0.25, Math.Cos(slowedTime Mod (Math.PI / 2)))
+
+        If (sunYPos <= 0.5) Then
+            sun.color = Lerp(GRAYISH_BLACK, ORANGE, sunYPos * 2.0)
+        Else
+            sun.color = Lerp(ORANGE, WHITE, (sunYPos - 0.5) * 2.0)
+        End If
 
         volumetricComponent.PreRender(time)
 
