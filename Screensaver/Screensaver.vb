@@ -6,6 +6,10 @@ Imports OpenTK.Input
 Public Class Screensaver
     Inherits GameWindow
 
+    ' Loader utility
+    ' Wraps verbose OpenGL commands in nice methods
+    Private loader As New Loader()
+
     ' Used by entirely shader dependent components
     ' Draws a screen covering quad
     Private screenQuadRenderer As ScreenQuadRenderer
@@ -54,15 +58,14 @@ Public Class Screensaver
         earth = New EarthManager(700000.0)
         sun = New SunManager(ORANGE, Vector3d.Normalize(New Vector3(1.0, 1.0, 0.0)))
 
-        screenQuadRenderer = New ScreenQuadRenderer()
+        screenQuadRenderer = New ScreenQuadRenderer(loader)
         camera = New Camera(New Vector3(0.0, earth.radius, 0.0),
                             New Vector3(1.0, earth.radius, 1.0),
                             DisplayDevice.Default.Width, DisplayDevice.Default.Height)
         scatteringComponent = New ScatteringComponent("ScreenQuadRenderer.vert", "scattering.frag", screenQuadRenderer, camera, earth, sun)
-        volumetricComponent = New VolumetricComponent("ScreenQuadRenderer.vert", "volumetric.frag", screenQuadRenderer, camera, earth, sun)
-        terrainComponent = New TerrainComponent(1000, 1000, 1, 1, camera)
+        'volumetricComponent = New VolumetricComponent("ScreenQuadRenderer.vert", "volumetric.frag", screenQuadRenderer, camera, earth, sun)
+        terrainComponent = New TerrainComponent("Terrain.vert", "Terrain.frag", 2000, 2000, 100.0, 2, camera, earth, loader)
         hdrComponent = New HDRComponent("ScreenQuadRenderer.vert", "hdr.frag", -0.8, screenQuadRenderer)
-
     End Sub
 
     Protected Overrides Sub OnResize(e As EventArgs)
@@ -109,7 +112,7 @@ Public Class Screensaver
     ' RGB Colors
     Private ReadOnly WHITE As New Vector3(1.0, 1.0, 1.0)
     Private ReadOnly ORANGE As New Vector3(1.0, 0.647, 0.0)
-    Private ReadOnly GRAYISH_BLACK As New Vector3(0.05, 0.05, 0.05)
+    Private ReadOnly GRAYISH_BLACK As New Vector3(0.08, 0.05, 0.08)
 
     Private Shared Function Lerp(v1 As Vector3, v2 As Vector3, t As Single) As Vector3
         Return v1 + t * (v2 - v1)
@@ -130,14 +133,15 @@ Public Class Screensaver
             sun.color = Lerp(ORANGE, WHITE, (sunYPos - 0.5) * 2.0)
         End If
 
-        volumetricComponent.PreRender(time)
+        'volumetricComponent.PreRender(time)
 
         hdrComponent.Bind()
         GL.Clear(ClearBufferMask.ColorBufferBit Or ClearBufferMask.DepthBufferBit)
         GL.Enable(EnableCap.Blend)
         GL.Disable(EnableCap.DepthTest)
         scatteringComponent.Render(time)
-        volumetricComponent.Render()
+        'volumetricComponent.Render()
+        terrainComponent.Render()
         GL.Disable(EnableCap.Blend)
         GL.Enable(EnableCap.DepthTest)
         hdrComponent.UnBind()

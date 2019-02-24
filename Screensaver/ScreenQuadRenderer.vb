@@ -7,16 +7,16 @@ Public Class ScreenQuadRenderer
     Private vao As Integer
     Private quadVbo As Integer
 
-    Public Sub New()
-        ' Generate vao & vbo
-        GL.GenVertexArrays(1, vao)
-        GL.GenBuffers(1, quadVbo)
+    Private loader As Loader
 
-        ' Bind vao to store vertex attrib calls
-        GL.BindVertexArray(vao)
+    Public Sub New(loaderComponent As Loader)
+        loader = loaderComponent
+
+        ' Generate vao & vbo
+        vao = loader.CreateVAO()
+        quadVbo = loader.CreateVBO(BufferTarget.ArrayBuffer)
 
         ' Buffer data for rectangle which covers entire screen
-        GL.BindBuffer(BufferTarget.ArrayBuffer, quadVbo)
         Dim vertices As Single() = {
             -1.0F, 1.0F, 0.0F, 1.0F,
             1.0F, 1.0F, 1.0F, 1.0F,
