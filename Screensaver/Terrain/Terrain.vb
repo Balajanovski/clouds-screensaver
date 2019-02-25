@@ -1,9 +1,6 @@
 ﻿Imports SharpNoise
 Imports SharpNoise.Builders
 Imports SharpNoise.Modules
-Imports SharpNoise.Utilities.Imaging
-Imports System.IO
-
 Imports OpenTK
 
 Public Class Terrain
@@ -54,19 +51,6 @@ Public Class Terrain
         terrainNoiseBuilder.SetDestSize(terrainNoiseWidth, terrainNoiseHeight)
         terrainNoiseBuilder.SetBounds(-1.0, 1.0, -1.0, 1.0)
         terrainNoiseBuilder.Build()
-
-        Dim image = New Image()
-        Dim renderer = New ImageRenderer() With {
-            .SourceNoiseMap = terrainNoise,
-            .DestinationImage = image
-        }
-
-        renderer.BuildGrayscaleGradient()
-        renderer.Render()
-
-        Using fs = File.OpenWrite("Noise.png")
-            image.SaveGdiBitmap(fs, Drawing.Imaging.ImageFormat.Png)
-        End Using
 
         terrainModel = generateTerrain()
     End Sub
