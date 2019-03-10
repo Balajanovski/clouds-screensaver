@@ -11,6 +11,8 @@ Public Class TerrainComponent
 
     Private earth As EarthManager
 
+    Private sun As SunManager
+
     Private model As RawModel
 
     Private shader As Shader
@@ -21,6 +23,8 @@ Public Class TerrainComponent
     Private grassTexture As Integer
     Private patchyGrassTexture As Integer
     Private rockTexture As Integer
+    Private rnormalTexture As Integer
+    Private rparallaxTexture As Integer
     Private snowTexture As Integer
 
     Public Sub New(shaderVertSrc As String,
@@ -31,9 +35,11 @@ Public Class TerrainComponent
                    terrainSampleDistance As Single,
                    ByRef cam As Camera,
                    ByRef earthManager As EarthManager,
+                   ByRef sunManager As SunManager,
                    ByRef loaderComponent As Loader)
         camera = cam
         earth = earthManager
+        sun = sunManager
         loader = loaderComponent
         amplitude = terrainAmplitude
 
@@ -52,6 +58,8 @@ Public Class TerrainComponent
         healthyGrassTexture = loader.LoadTexture("grass3.jpg")
         patchyGrassTexture = loader.LoadTexture("grass2.jpg")
         rockTexture = loader.LoadTexture("rdiffuse.jpg")
+        rnormalTexture = loader.LoadTexture("rnormal.jpg")
+        rparallaxTexture = loader.LoadTexture("rdisp.png")
         snowTexture = loader.LoadTexture("snow.jpg")
     End Sub
 
@@ -64,11 +72,13 @@ Public Class TerrainComponent
         shader.SetMat4("viewMatrix", False, camera.ViewMatrix)
         shader.SetMat4("projectionMatrix", False, camera.ProjectionMatrix)
 
-        shader.SetInt("grass", 0)
-        shader.SetInt("healthyGrass", 1)
-        shader.SetInt("patchyGrass", 2)
-        shader.SetInt("rock", 3)
-        shader.SetInt("snow", 4)
+        shader.SetInt("grassTex", 0)
+        shader.SetInt("healthyGrassTex", 1)
+        shader.SetInt("patchyGrassTex", 2)
+        shader.SetInt("rockTex", 3)
+        shader.SetInt("snowTex", 4)
+        shader.SetInt("rockNormalMap", 5)
+        shader.SetInt("rockParallaxMap", 6)
 
         GL.ActiveTexture(TextureUnit.Texture0)
         GL.BindTexture(TextureTarget.Texture2D, grassTexture)
@@ -80,9 +90,15 @@ Public Class TerrainComponent
         GL.BindTexture(TextureTarget.Texture2D, rockTexture)
         GL.ActiveTexture(TextureUnit.Texture4)
         GL.BindTexture(TextureTarget.Texture2D, snowTexture)
+        GL.ActiveTexture(TextureUnit.Texture5)
+        GL.BindTexture(TextureTarget.Texture2D, rnormalTexture)
+        GL.ActiveTexture(TextureUnit.Texture6)
+        GL.BindTexture(TextureTarget.Texture2D, rparallaxTexture)
 
         shader.SetFloat("snowHeight", 80.0)
         shader.SetFloat("grassCoverage", 0.77)
+        shader.SetVec3("sunColor", sun.color)
+        shader.SetVec3("sunDir", sun.lightDir)
 
         GL.DrawElements(BeginMode.Triangles, model.NumVertices, DrawElementsType.UnsignedInt, 0)
 

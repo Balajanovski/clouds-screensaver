@@ -180,9 +180,6 @@
     <EmbeddedResource Include="Resources\heightmapMask.jpg" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\heightmapMaskTest.jpg" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="Resources\grass2.jpg" />
     <EmbeddedResource Include="Resources\grass3.jpg" />
     <EmbeddedResource Include="Resources\rdiffuse.jpg" />

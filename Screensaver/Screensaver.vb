@@ -63,8 +63,8 @@ Public Class Screensaver
                             New Vector3(1.0, earth.radius, 1.0),
                             DisplayDevice.Default.Width, DisplayDevice.Default.Height)
         scatteringComponent = New ScatteringComponent("ScreenQuadRenderer.vert", "scattering.frag", screenQuadRenderer, camera, earth, sun)
-        'volumetricComponent = New VolumetricComponent("ScreenQuadRenderer.vert", "volumetric.frag", screenQuadRenderer, camera, earth, sun)
-        terrainComponent = New TerrainComponent("Terrain.vert", "Terrain.frag", 2000, 2000, 100.0, 1.0, camera, earth, loader)
+        volumetricComponent = New VolumetricComponent("ScreenQuadRenderer.vert", "volumetric.frag", screenQuadRenderer, camera, earth, sun)
+        terrainComponent = New TerrainComponent("Terrain.vert", "Terrain.frag", 2000, 2000, 100.0, 1.0, camera, earth, sun, loader)
         hdrComponent = New HDRComponent("ScreenQuadRenderer.vert", "hdr.frag", -0.8, screenQuadRenderer)
     End Sub
 
@@ -133,14 +133,14 @@ Public Class Screensaver
             sun.color = Lerp(ORANGE, WHITE, (sunYPos - 0.5) * 2.0)
         End If
 
-        'volumetricComponent.PreRender(time)
+        volumetricComponent.PreRender(time)
 
         hdrComponent.Bind()
         GL.Clear(ClearBufferMask.ColorBufferBit Or ClearBufferMask.DepthBufferBit)
         GL.Enable(EnableCap.Blend)
         GL.Disable(EnableCap.DepthTest)
         scatteringComponent.Render(time)
-        'volumetricComponent.Render()
+        volumetricComponent.Render()
         terrainComponent.Render()
         GL.Disable(EnableCap.Blend)
         GL.Enable(EnableCap.DepthTest)

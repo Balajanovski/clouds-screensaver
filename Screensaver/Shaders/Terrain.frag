@@ -3,17 +3,31 @@
 in vec2 texCoords;
 
 in vec3 surfaceNormal;
-in vec3 toLightSource;
 in vec3 vPos;
-
 in vec3 toCameraVector;
+in mat3 TBN;
 
-uniform sampler2D healthyGrass, grass, patchyGrass, rock, snow;
+uniform vec3 sunDir;
+uniform vec3 sunColor;
+
+uniform sampler2D healthyGrassTex, grassTex, patchyGrassTex, rockTex, snowTex;
+uniform sampler2D rockNormalMap, rockParallaxMap;
 uniform float snowHeight;
 uniform float grassCoverage;
-uniform float amplitude;
 
 out vec4 out_color;
+
+struct MaterialProperties {
+	vec4 color;
+	vec3 normal;
+};
+
+// Frequency for sampling textures
+const float ROCK_TEX_FREQ = 40.0;
+const float SNOW_TEX_FREQ = 40.0;
+const float GRASS_TEX_FREQ = 40.0;
+const float HEALTHY_GRASS_TEX_FREQ = 50.0;
+const float PATCHY_GRASS_TEX_FREQ = 10.0;
 
 vec4 applySnow(in vec4 heightColor, in float height, in float transition, in vec4 snowTex) {
 	vec4 snowedHeightColor = heightColor;
@@ -27,44 +41,84 @@ vec4 applySnow(in vec4 heightColor, in float height, in float transition, in vec
 	return snowedHeightColor;
 }
 
-vec4 getTexture() {
+vec3 getRockNormal() {
+	vec3 normal = texture(rockNormalMap, texCoords*ROCK_TEX_FREQ).rgb;
+	normal = normalize(normal * 2.0 - 1.0);
+	normal = normalize(TBN * normal);
+
+	return normal;
+}
+
+MaterialProperties getHeightMaterial() {
 	float transition = 20.0;
 
 	float height = vPos.y;
 
-	vec4 rockTex = texture(rock, texCoords*40.0);
-	vec4 snowTex = texture(snow, texCoords*40.0);
+	vec4 rock = texture(rockTex, texCoords*ROCK_TEX_FREQ);
+	vec4 snow = texture(snowTex, texCoords*SNOW_TEX_FREQ);
 	// Mix different grass textures together at differing frequencies to create more natural looking grass
-	vec4 grassTex = texture(grass, texCoords*(40.0)) * 0.4 +
-					texture(healthyGrass, texCoords*(50.0)) * 0.3 + 
-					texture(patchyGrass, texCoords*(10.0)) * 0.3;
+	vec4 grass = texture(grassTex, texCoords*(GRASS_TEX_FREQ)) * 0.4 +
+					texture(healthyGrassTex, texCoords*(HEALTHY_GRASS_TEX_FREQ)) * 0.3 + 
+					texture(patchyGrassTex, texCoords*(PATCHY_GRASS_TEX_FREQ)) * 0.3;
 
 	vec3 upVector = vec3(0, 1, 0);
 
 	vec4 heightColor;
+	vec3 normal = surfaceNormal;
+
 	float cosV = abs(dot(surfaceNormal, upVector)) / (length(surfaceNormal) * 1.0);
 	float tenPercentGrass = grassCoverage - grassCoverage*0.1;
 
 	// Find base texture
 	if(cosV > tenPercentGrass) {
 		float blendingCoeff = clamp(pow((cosV - tenPercentGrass) / (grassCoverage * 0.1), 1.0), 0.0, 1.0);
-		heightColor = mix(rockTex, grassTex, blendingCoeff);
+		
+		heightColor = mix(rock, grass, blendingCoeff);
 
-		vec4 snowedHeightColor = applySnow(heightColor, height, transition, snowTex);
+		vec4 snowedHeightColor = applySnow(heightColor, height, transition, snow);
 		heightColor = mix(heightColor, snowedHeightColor, blendingCoeff);
-	} else if (cosV > grassCoverage) {
-		heightColor = grassTex;
 
-		heightColor = applySnow(heightColor, height, transition, snowTex);
+		normal = mix(getRockNormal(), surfaceNormal, blendingCoeff);
+	} else if (cosV > grassCoverage) {
+		heightColor = grass;
+
+		heightColor = applySnow(heightColor, height, transition, snow);
     } else {
-		heightColor = rockTex;	
+		heightColor = rock;	
+		normal = getRockNormal();
 	}
 
 
-	return heightColor;
-	
+	return MaterialProperties(heightColor, normal);	
+}
+
+vec3 ambient(){
+	float ambientStrength = 0.2; 
+    vec3 ambient = ambientStrength * sunColor; 
+    return ambient;
+}
+
+vec3 diffuse(vec3 normal){
+	float diffuseFactor = max(0.0, dot(sunDir, normal));
+	const float diffuseConst = 0.75;
+	vec3 diffuse = diffuseFactor * sunColor * diffuseConst;
+	return diffuse;
+}
+
+vec3 specular(vec3 normal){
+	float specularFactor = 0.01f;
+	vec3 reflectDir = reflect(-sunDir, normal);  
+	float spec = pow(max(dot(toCameraVector, reflectDir), 0.0), 32.0);
+	vec3 specular = spec * sunColor*specularFactor; 
+	return specular;
 }
 
 void main() {
-	out_color = getTexture();
+	MaterialProperties heightMaterial = getHeightMaterial();
+
+	vec3 amb = ambient();
+	vec3 diff = diffuse(heightMaterial.normal);
+	vec3 spec = diffuse(heightMaterial.normal);
+
+	out_color = heightMaterial.color*vec4((amb + diff + spec) * vec3(1.0), 1.0);
 }
