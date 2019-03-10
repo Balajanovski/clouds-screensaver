@@ -17,7 +17,11 @@ Public Class TerrainComponent
 
     Private amplitude As Single
 
+    Private healthyGrassTexture As Integer
     Private grassTexture As Integer
+    Private patchyGrassTexture As Integer
+    Private rockTexture As Integer
+    Private snowTexture As Integer
 
     Public Sub New(shaderVertSrc As String,
                    shaderFragSrc As String,
@@ -39,11 +43,16 @@ Public Class TerrainComponent
                               terrainLength,
                               terrainAmplitude,
                               terrainSampleDistance,
-                              New Vector3(0.0, earth.radius, 0.0),
+                              "heightmapMask.jpg",
+                              New Vector3(-(terrainWidth * terrainSampleDistance) * 0.5, earth.radius - 20, -(terrainWidth * terrainSampleDistance) * 0.5),
                               loader)
 
         model = terrain.Model
         grassTexture = loader.LoadTexture("grass.jpg")
+        healthyGrassTexture = loader.LoadTexture("grass3.jpg")
+        patchyGrassTexture = loader.LoadTexture("grass2.jpg")
+        rockTexture = loader.LoadTexture("rdiffuse.jpg")
+        snowTexture = loader.LoadTexture("snow.jpg")
     End Sub
 
     Public Sub Render()
@@ -55,9 +64,25 @@ Public Class TerrainComponent
         shader.SetMat4("viewMatrix", False, camera.ViewMatrix)
         shader.SetMat4("projectionMatrix", False, camera.ProjectionMatrix)
 
-        shader.SetInt("grassTexture", 0)
+        shader.SetInt("grass", 0)
+        shader.SetInt("healthyGrass", 1)
+        shader.SetInt("patchyGrass", 2)
+        shader.SetInt("rock", 3)
+        shader.SetInt("snow", 4)
+
         GL.ActiveTexture(TextureUnit.Texture0)
         GL.BindTexture(TextureTarget.Texture2D, grassTexture)
+        GL.ActiveTexture(TextureUnit.Texture1)
+        GL.BindTexture(TextureTarget.Texture2D, healthyGrassTexture)
+        GL.ActiveTexture(TextureUnit.Texture2)
+        GL.BindTexture(TextureTarget.Texture2D, patchyGrassTexture)
+        GL.ActiveTexture(TextureUnit.Texture3)
+        GL.BindTexture(TextureTarget.Texture2D, rockTexture)
+        GL.ActiveTexture(TextureUnit.Texture4)
+        GL.BindTexture(TextureTarget.Texture2D, snowTexture)
+
+        shader.SetFloat("snowHeight", 80.0)
+        shader.SetFloat("grassCoverage", 0.77)
 
         GL.DrawElements(BeginMode.Triangles, model.NumVertices, DrawElementsType.UnsignedInt, 0)
 
@@ -83,7 +108,7 @@ Public Class TerrainComponent
         Dim modelMatrix = New Matrix4(1, 0, 0, 0,
                                       0, 1, 0, 0,
                                       0, 0, 1, 0,
-                                      pos.X, pos.Y - (1.45 * amplitude), pos.Z, 1)
+                                      pos.X, pos.Y, pos.Z, 1)
 
         shader.SetMat4("modelMatrix", False, modelMatrix)
     End Sub

@@ -3,6 +3,10 @@ Imports SharpNoise.Builders
 Imports SharpNoise.Modules
 Imports OpenTK
 
+Imports System.Reflection
+Imports System.Drawing
+Imports System.IO
+
 Public Class Terrain
     Private ridgedMultiFractal As New RidgedMulti() With {
         .Seed = New Random().Next,
@@ -20,7 +24,7 @@ Public Class Terrain
     }
 
     Private terrainNoiseWidth As Integer
-    Private terrainNoiseHeight As Integer
+    Private terrainNoiseLength As Integer
     Private terrainAmpl As Single
     Private terrainSmplDist As Single
 
@@ -30,15 +34,18 @@ Public Class Terrain
 
     Private loader As Loader
 
+    Private heightMapMask As Bitmap
+
     Public Sub New(terrainWidth As Integer,
                    terrainLength As Integer,
                    terrainAmplitude As Single,
                    terrainSampleDistance As Single,
+                   heightmapMaskSrc As String,
                    pos As Vector3,
                    ByRef loaderComponent As Loader)
         loader = loaderComponent
         terrainNoiseWidth = terrainWidth
-        terrainNoiseHeight = terrainLength
+        terrainNoiseLength = terrainLength
         terrainAmpl = terrainAmplitude
         terrainSmplDist = terrainSampleDistance
         terrainPosition = pos
@@ -48,16 +55,18 @@ Public Class Terrain
         }
         terrainNoiseBuilder.SourceModule = amplitudeAdjustedRidgedMulti
 
-        terrainNoiseBuilder.SetDestSize(terrainNoiseWidth, terrainNoiseHeight)
+        terrainNoiseBuilder.SetDestSize(terrainNoiseWidth, terrainNoiseLength)
         terrainNoiseBuilder.SetBounds(-1.0, 1.0, -1.0, 1.0)
         terrainNoiseBuilder.Build()
+
+        heightMapMask = loadHeightMapMask(heightmapMaskSrc)
 
         terrainModel = generateTerrain()
     End Sub
 
     Private Function generateTerrain() As RawModel
         Dim vertexWidthCount As Integer = terrainNoiseWidth / terrainSmplDist
-        Dim vertexHeightCount As Integer = terrainNoiseHeight / terrainSmplDist
+        Dim vertexHeightCount As Integer = terrainNoiseLength / terrainSmplDist
 
         Dim count As Integer = vertexWidthCount * vertexHeightCount
 
@@ -67,12 +76,13 @@ Public Class Terrain
 
         Dim indices(6 * (vertexWidthCount - 1) * (vertexHeightCount - 1)) As Integer
 
+        ' Create vertex coords, normals and texture coords
         Dim vertexPointer As Integer = 0
         For i As Integer = 0 To (vertexHeightCount - 1)
             For j As Integer = 0 To (vertexWidthCount - 1)
                 vertices(vertexPointer * 3) = CType(j, Single) / CType(vertexWidthCount - 1, Single) * terrainNoiseWidth
                 vertices(vertexPointer * 3 + 1) = getHeight(j, i)
-                vertices(vertexPointer * 3 + 2) = CType(i, Single) / CType(vertexHeightCount - 1, Single) * terrainNoiseHeight
+                vertices(vertexPointer * 3 + 2) = CType(i, Single) / CType(vertexHeightCount - 1, Single) * terrainNoiseLength
 
                 Dim normal As Vector3 = calculateNormal(j, i)
                 normals(vertexPointer * 3) = normal.X
@@ -86,6 +96,7 @@ Public Class Terrain
             Next
         Next
 
+        ' Create values for element buffer object
         Dim pointer As Integer = 0
         For gz As Integer = 0 To vertexHeightCount - 2
             For gx As Integer = 0 To vertexWidthCount - 2
@@ -143,6 +154,33 @@ Public Class Terrain
 
     Private Function getHeight(x As Integer,
                                z As Integer) As Single
-        Return terrainNoise.Item(x, z)
+        Return terrainNoise.Item(x, z) * sampleHeightmapMask(x, z)
+    End Function
+
+    Private Function sampleHeightmapMask(ByVal x As Integer,
+                                         ByVal z As Integer) As Single
+        If x < 0 Then
+            x = 0
+        ElseIf x >= terrainNoiseWidth Then
+            x = terrainNoiseWidth - 1
+        End If
+
+        If z < 0 Then
+            z = 0
+        ElseIf z >= terrainNoiseLength Then
+            z = terrainNoiseLength - 1
+        End If
+
+        Return (CType(heightMapMask.GetPixel(x, z).R, Single) / 255.0)
+    End Function
+
+    Private Shared Function loadHeightMapMask(heightMapMaskSrc As String) As Bitmap
+        Dim currentAssembly = Assembly.GetExecutingAssembly
+
+        Dim imageStream As Stream _
+            = currentAssembly.GetManifestResourceStream("Screensaver." + heightMapMaskSrc)
+        Dim image = New Bitmap(imageStream)
+
+        Return image
     End Function
 End Class
