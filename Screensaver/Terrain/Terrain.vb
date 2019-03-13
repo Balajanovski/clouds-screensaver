@@ -10,8 +10,9 @@ Imports System.IO
 Public Class Terrain
     Private ridgedMultiFractal As New RidgedMulti() With {
         .Seed = New Random().Next,
-        .Lacunarity = 2.0,
-        .OctaveCount = 5
+        .Lacunarity = 3.0,
+        .OctaveCount = 5,
+        .Frequency = 1.5
     }
 
     Private amplitudeAdjustedRidgedMulti As New Multiply() With {

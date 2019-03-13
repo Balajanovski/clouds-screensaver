@@ -9,17 +9,21 @@ out vec2 texCoords;
 out vec3 surfaceNormal;
 out mat3 TBN;
 out vec3 vPos;
+out vec4 fragPosLightSpace;
 
 out vec3 toCameraVector;
 
 uniform mat4 modelMatrix;
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
+uniform mat4 lightSpaceMatrix;
 
 void main() {
 	vec4 worldPos = modelMatrix * vec4(aPos, 1.0);
 
 	gl_Position = projectionMatrix * viewMatrix * worldPos;
+
+	fragPosLightSpace = lightSpaceMatrix * vec4(worldPos.xyz, 1.0);
 
 	texCoords = aTexCoords;
 

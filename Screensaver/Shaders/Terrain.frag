@@ -5,13 +5,15 @@ in vec2 texCoords;
 in vec3 surfaceNormal;
 in vec3 vPos;
 in vec3 toCameraVector;
+in vec4 fragPosLightSpace;
 in mat3 TBN;
 
 uniform vec3 sunDir;
 uniform vec3 sunColor;
 
 uniform sampler2D healthyGrassTex, grassTex, patchyGrassTex, rockTex, snowTex;
-uniform sampler2D rockNormalMap, rockParallaxMap;
+uniform sampler2D rockNormalMap;
+uniform sampler2D shadowMap;
 uniform float snowHeight;
 uniform float grassCoverage;
 
@@ -58,8 +60,8 @@ MaterialProperties getHeightMaterial() {
 	vec4 snow = texture(snowTex, texCoords*SNOW_TEX_FREQ);
 	// Mix different grass textures together at differing frequencies to create more natural looking grass
 	vec4 grass = texture(grassTex, texCoords*(GRASS_TEX_FREQ)) * 0.4 +
-					texture(healthyGrassTex, texCoords*(HEALTHY_GRASS_TEX_FREQ)) * 0.3 + 
-					texture(patchyGrassTex, texCoords*(PATCHY_GRASS_TEX_FREQ)) * 0.3;
+				 texture(healthyGrassTex, texCoords*(HEALTHY_GRASS_TEX_FREQ)) * 0.3 + 
+				 texture(patchyGrassTex, texCoords*(PATCHY_GRASS_TEX_FREQ)) * 0.3;
 
 	vec3 upVector = vec3(0, 1, 0);
 
@@ -113,6 +115,18 @@ vec3 specular(vec3 normal){
 	return specular;
 }
 
+float shadowCalculation(vec4 fragPosLightSpace) {
+	vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+	projCoords = projCoords * 0.5 + 0.5;
+	
+	float closestDepth = texture(shadowMap, projCoords.xy).r;
+	float currentDepth = projCoords.z;
+
+	float shadow = currentDepth >  closestDepth ? 1.0 : 0.0;
+
+	return shadow;
+}
+
 void main() {
 	MaterialProperties heightMaterial = getHeightMaterial();
 
@@ -120,5 +134,7 @@ void main() {
 	vec3 diff = diffuse(heightMaterial.normal);
 	vec3 spec = diffuse(heightMaterial.normal);
 
-	out_color = heightMaterial.color*vec4((amb + diff + spec) * vec3(1.0), 1.0);
+	float shadow = 1.0 - shadowCalculation(fragPosLightSpace);
+
+	out_color = heightMaterial.color*vec4((amb + ((diff + spec) * shadow)) * vec3(1.0), 1.0);
 }

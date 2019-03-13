@@ -439,7 +439,7 @@ void main() {
 
 	// Compute fog amount -- early exit if fog is too large
 	float fogAmount = computeFogAmount(cameraPos + startPos, 0.00002);
-	if (fogAmount > 0.600) {
+	if (fogAmount > 0.990) {
 		out_color = vec4(0.0, 0.0, 0.0, 0.0);
 		cloudColor = vec4(0.0, 0.0, 0.0, 0.0);
 		alphaness = vec4(0.0, 0.0, 0.0, 1.0);

@@ -64,7 +64,7 @@ Public Class Screensaver
                             DisplayDevice.Default.Width, DisplayDevice.Default.Height)
         scatteringComponent = New ScatteringComponent("ScreenQuadRenderer.vert", "scattering.frag", screenQuadRenderer, camera, earth, sun)
         volumetricComponent = New VolumetricComponent("ScreenQuadRenderer.vert", "volumetric.frag", screenQuadRenderer, camera, earth, sun)
-        terrainComponent = New TerrainComponent("Terrain.vert", "Terrain.frag", 2000, 2000, 100.0, 1.0, camera, earth, sun, loader)
+        terrainComponent = New TerrainComponent("Terrain.vert", "Terrain.frag", "DepthShader.vert", "DepthShader.frag", 2000, 2000, 100.0, 1.0, camera, earth, sun, loader)
         hdrComponent = New HDRComponent("ScreenQuadRenderer.vert", "hdr.frag", -0.8, screenQuadRenderer)
     End Sub
 

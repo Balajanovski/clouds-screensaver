@@ -172,6 +172,8 @@
     <EmbeddedResource Include="Shaders\PostProcessClouds.frag" />
     <EmbeddedResource Include="Shaders\Terrain.frag" />
     <EmbeddedResource Include="Shaders\Terrain.vert" />
+    <EmbeddedResource Include="Shaders\DepthShader.vert" />
+    <EmbeddedResource Include="Shaders\DepthShader.frag" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\grass.jpg" />
@@ -183,7 +185,6 @@
     <EmbeddedResource Include="Resources\grass2.jpg" />
     <EmbeddedResource Include="Resources\grass3.jpg" />
     <EmbeddedResource Include="Resources\rdiffuse.jpg" />
-    <EmbeddedResource Include="Resources\rdisp.png" />
     <EmbeddedResource Include="Resources\rnormal.jpg" />
     <EmbeddedResource Include="Resources\rock.jpg" />
     <EmbeddedResource Include="Resources\snow.jpg" />
