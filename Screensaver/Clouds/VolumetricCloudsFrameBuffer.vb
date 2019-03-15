@@ -7,7 +7,13 @@ Public Class VolumetricCloudsFrameBuffer
     Private lastFrameTex As Integer
     Private alphanessTex As Integer
 
-    Public Sub New()
+    Private resWidth As Integer
+    Private resHeight As Integer
+
+    Public Sub New(resolutionWidth As Integer, resolutionHeight As Integer)
+        resWidth = resolutionWidth
+        resHeight = resolutionHeight
+
         ' Configure Volumetric Clouds Buffer
         ' -------------------------
         volumetricCloudsFrameBuffer = GL.GenFramebuffer()
@@ -17,8 +23,8 @@ Public Class VolumetricCloudsFrameBuffer
         currentFrameTex = GL.GenTexture()
         GL.ActiveTexture(TextureUnit.Texture0)
         GL.BindTexture(TextureTarget.Texture2D, currentFrameTex)
-        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba16f, DisplayDevice.Default.Width,
-                      DisplayDevice.Default.Height, 0, PixelFormat.Rgba, PixelType.Float, IntPtr.Zero)
+        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba16f, resolutionWidth,
+                      resolutionHeight, 0, PixelFormat.Rgba, PixelType.Float, IntPtr.Zero)
         GL.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, All.Nearest)
         GL.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, All.Nearest)
         GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
@@ -28,8 +34,8 @@ Public Class VolumetricCloudsFrameBuffer
         lastFrameTex = GL.GenTexture()
         GL.ActiveTexture(TextureUnit.Texture1)
         GL.BindTexture(TextureTarget.Texture2D, lastFrameTex)
-        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba16f, DisplayDevice.Default.Width,
-                      DisplayDevice.Default.Height, 0, PixelFormat.Rgba, PixelType.Float, IntPtr.Zero)
+        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba16f, resolutionWidth,
+                      resolutionHeight, 0, PixelFormat.Rgba, PixelType.Float, IntPtr.Zero)
         GL.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, All.Nearest)
         GL.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, All.Nearest)
         GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment1,
@@ -39,8 +45,8 @@ Public Class VolumetricCloudsFrameBuffer
         GL.PixelStore(PixelStoreParameter.UnpackAlignment, 1)
         GL.ActiveTexture(TextureUnit.Texture2)
         GL.BindTexture(TextureTarget.Texture2D, alphanessTex)
-        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.R16f, DisplayDevice.Default.Width,
-                      DisplayDevice.Default.Height, 0, PixelFormat.Red, PixelType.Float, IntPtr.Zero)
+        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.R16f, resolutionWidth,
+                      resolutionHeight, 0, PixelFormat.Red, PixelType.Float, IntPtr.Zero)
         GL.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, All.Nearest)
         GL.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, All.Nearest)
         GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment2,
@@ -54,7 +60,7 @@ Public Class VolumetricCloudsFrameBuffer
 
     Public Sub Bind()
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, volumetricCloudsFrameBuffer)
-        GL.Viewport(0, 0, DisplayDevice.Default.Width, DisplayDevice.Default.Height)
+        GL.Viewport(0, 0, resWidth, resHeight)
         GL.Enable(EnableCap.DepthTest)
     End Sub
 

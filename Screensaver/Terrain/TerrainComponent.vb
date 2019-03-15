@@ -32,8 +32,8 @@ Public Class TerrainComponent
     Private depthMapFBO As Integer
     Private depthMap As Integer
 
-    Private Const SHADOW_WIDTH As Integer = 1024
-    Private Const SHADOW_HEIGHT As Integer = 1024
+    Private Const SHADOW_WIDTH As Integer = 512
+    Private Const SHADOW_HEIGHT As Integer = 512
 
     Public Sub New(shaderVertSrc As String,
                    shaderFragSrc As String,
@@ -77,6 +77,7 @@ Public Class TerrainComponent
         ' Generate frame buffer for shadow mapping
         depthMapFBO = GL.GenFramebuffer()
         depthMap = GL.GenTexture()
+        GL.ActiveTexture(TextureUnit.Texture0)
         GL.BindTexture(TextureTarget.Texture2D, depthMap)
         GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.DepthComponent,
                       SHADOW_WIDTH, SHADOW_HEIGHT, 0, PixelFormat.DepthComponent, PixelType.Float, IntPtr.Zero)
@@ -89,15 +90,26 @@ Public Class TerrainComponent
         GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthAttachment, TextureTarget.Texture2D, depthMap, 0)
         GL.DrawBuffer(All.None)
         GL.ReadBuffer(All.None)
+
+        If GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer) <> All.FramebufferComplete Then
+            Throw New Exception("error: Shadow Mapping Framebuffer Incomplete")
+        End If
+
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0)
     End Sub
 
     Public Sub RenderShadowMap()
         GL.Viewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT)
+        GL.Enable(EnableCap.DepthTest)
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, depthMapFBO)
         GL.Clear(ClearBufferMask.DepthBufferBit)
         configureShadowShaderAndMatrices()
-        renderScene()
+
+        prepareTerrain(terrain)
+        GL.DrawElements(BeginMode.Triangles, model.NumVertices, DrawElementsType.UnsignedInt, 0)
+        unbindTexturedModel()
+
+
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0)
         GL.Viewport(0, 0, DisplayDevice.Default.Width, DisplayDevice.Default.Height)
     End Sub
@@ -105,10 +117,6 @@ Public Class TerrainComponent
     Public Sub Render()
         configureShaderAndMatrices()
 
-        renderScene()
-    End Sub
-
-    Private Sub renderScene()
         prepareTerrain(terrain)
 
         shader.SetInt("grassTex", 0)
@@ -158,21 +166,21 @@ Public Class TerrainComponent
         GL.BindVertexArray(0)
     End Sub
 
-    Private Sub loadModelMatrix()
+    Private Sub loadModelMatrix(ByRef loadShader As Shader)
         Dim pos = terrain.Position
         Dim modelMatrix = New Matrix4(1, 0, 0, 0,
                                       0, 1, 0, 0,
                                       0, 0, 1, 0,
                                       pos.X, pos.Y, pos.Z, 1)
 
-        shader.SetMat4("modelMatrix", False, modelMatrix)
+        loadShader.SetMat4("modelMatrix", False, modelMatrix)
     End Sub
 
     Private Sub configureShaderAndMatrices()
         shader.Use()
 
         ' Send transformation matrices to shader
-        loadModelMatrix()
+        loadModelMatrix(shader)
         shader.SetMat4("viewMatrix", False, camera.ViewMatrix)
         shader.SetMat4("projectionMatrix", False, camera.ProjectionMatrix)
     End Sub
@@ -181,11 +189,11 @@ Public Class TerrainComponent
         shadowShader.Use()
 
         ' Send transformation matrix to shader
-        loadModelMatrix()
+        loadModelMatrix(shadowShader)
         Dim lightProjection = Matrix4.CreateOrthographic(DisplayDevice.Default.Width,
-                      DisplayDevice.Default.Height, 1.0, 7.5)
-        Dim lightView = Matrix4.LookAt(sun.position, New Vector3(0.0, 0.0, 0.0), New Vector3(0.0, 1.0, 0.0))
-        Dim lightSpaceMatrix = lightProjection * lightView
-        shader.SetMat4("lightSpaceMatrix", False, lightSpaceMatrix)
+                      DisplayDevice.Default.Height, 1.0, 512.0)
+        Dim lightView = Matrix4.LookAt(sun.position * 100.0 + New Vector3(0, earth.radius, 0), New Vector3(0.0, 0.0, 0.0), New Vector3(0.0, 1.0, 0.0))
+        shadowShader.SetMat4("lightSpaceProjection", False, lightProjection)
+        shadowShader.SetMat4("lightSpaceView", False, lightView)
     End Sub
 End Class

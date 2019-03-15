@@ -10,7 +10,7 @@ Public Class VolumetricComponent
     Private camera As Camera
     Private earth As EarthManager
     Private sun As SunManager
-    Private temporalProjection As New VolumetricCloudsFrameBuffer()
+    Private temporalProjection As VolumetricCloudsFrameBuffer
 
     ' Store previous view projection matrix for temporal reprojection
     Dim oldViewProjection As Matrix4
@@ -29,12 +29,20 @@ Public Class VolumetricComponent
     Private weatherNoise As Integer
     Private curlNoise As Integer
 
+    ' Clouds resolution
+    Private ReadOnly cloudsResolutionWidth As Integer
+    Private ReadOnly cloudsResolutionHeight As Integer
+
     Public Sub New(vertexSrc As String,
                    fragSrc As String,
                    ByRef quadRen As ScreenQuadRenderer,
                    ByRef cam As Camera,
                    ByRef earthManager As EarthManager,
                    ByRef sunManager As SunManager)
+        cloudsResolutionWidth = DisplayDevice.Default.Width * 0.5
+        cloudsResolutionHeight = DisplayDevice.Default.Height * 0.5
+        temporalProjection = New VolumetricCloudsFrameBuffer(cloudsResolutionWidth, cloudsResolutionHeight)
+
         volumetricShader = New Shader(vertexSrc, fragSrc)
         quadRenderer = quadRen
         camera = cam
@@ -75,7 +83,7 @@ Public Class VolumetricComponent
         volumetricShader.Use()
 
         ' Set uniforms
-        volumetricShader.SetVec2("resolution", DisplayDevice.Default.Width, DisplayDevice.Default.Height)
+        volumetricShader.SetVec2("resolution", cloudsResolutionWidth, cloudsResolutionHeight)
         volumetricShader.SetFloat("time", time)
         volumetricShader.SetVec3("cameraPos", camera.Position)
 
@@ -131,7 +139,7 @@ Public Class VolumetricComponent
         ' Blit volumetric clouds to screen with post processing
         postProcessClouds.Use()
         postProcessClouds.SetInt("textureToDraw", 0)
-        postProcessClouds.SetVec2("resolution", DisplayDevice.Default.Width, DisplayDevice.Default.Height)
+        postProcessClouds.SetVec2("resolution", cloudsResolutionWidth, cloudsResolutionHeight)
         GL.ActiveTexture(TextureUnit.Texture0)
         GL.BindTexture(TextureTarget.Texture2D, temporalProjection.currentFrame)
         quadRenderer.Render()

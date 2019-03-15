@@ -18,12 +18,12 @@ Public Class ScreenQuadRenderer
 
         ' Buffer data for rectangle which covers entire screen
         Dim vertices As Single() = {
-            -1.0F, 1.0F, 0.0F, 1.0F,
             1.0F, 1.0F, 1.0F, 1.0F,
-            1.0F, -1.0F, 1.0F, 0.0F,
-            1.0F, -1.0F, 1.0F, 0.0F,
+            -1.0F, 1.0F, 0.0F, 1.0F,
             -1.0F, -1.0F, 0.0F, 0.0F,
-            -1.0F, 1.0F, 0.0F, 1.0F
+            -1.0F, -1.0F, 0.0F, 0.0F,
+            1.0F, -1.0F, 1.0F, 0.0F,
+            1.0F, 1.0F, 1.0F, 1.0F
         }
         GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * Len(New Single),
                       vertices, BufferUsageHint.StaticDraw)
