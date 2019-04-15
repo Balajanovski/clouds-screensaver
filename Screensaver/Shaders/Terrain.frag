@@ -133,7 +133,7 @@ void main() {
 
 	vec3 amb = ambient();
 	vec3 diff = diffuse(heightMaterial.normal);
-	vec3 spec = diffuse(heightMaterial.normal);
+	vec3 spec = specular(heightMaterial.normal);
 
 	float shadow = 1.0 - shadowCalculation(fragPosLightSpace);
 

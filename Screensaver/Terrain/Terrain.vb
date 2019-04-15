@@ -35,6 +35,8 @@ Public Class Terrain
 
     Private loader As Loader
 
+    Private treeComponent As TerrainObjectComponent
+
     Private heightMapMask As Bitmap
 
     Public Sub New(terrainWidth As Integer,
@@ -43,8 +45,10 @@ Public Class Terrain
                    terrainSampleDistance As Single,
                    heightmapMaskSrc As String,
                    pos As Vector3,
-                   ByRef loaderComponent As Loader)
+                   ByRef loaderComponent As Loader,
+                   ByRef treeComp As TerrainObjectComponent)
         loader = loaderComponent
+        treeComponent = treeComp
         terrainNoiseWidth = terrainWidth
         terrainNoiseLength = terrainLength
         terrainAmpl = terrainAmplitude
@@ -81,14 +85,28 @@ Public Class Terrain
         Dim vertexPointer As Integer = 0
         For i As Integer = 0 To (vertexHeightCount - 1)
             For j As Integer = 0 To (vertexWidthCount - 1)
-                vertices(vertexPointer * 3) = CType(j, Single) / CType(vertexWidthCount - 1, Single) * terrainNoiseWidth
-                vertices(vertexPointer * 3 + 1) = getHeight(j, i)
-                vertices(vertexPointer * 3 + 2) = CType(i, Single) / CType(vertexHeightCount - 1, Single) * terrainNoiseLength
+                Dim terrainVertexPosition As New Vector3()
+
+                terrainVertexPosition.X = CType(j, Single) / CType(vertexWidthCount - 1, Single) * terrainNoiseWidth
+                terrainVertexPosition.Y = getHeight(j, i)
+                terrainVertexPosition.Z = CType(i, Single) / CType(vertexHeightCount - 1, Single) * terrainNoiseLength
+
+                vertices(vertexPointer * 3) = terrainVertexPosition.X
+                vertices(vertexPointer * 3 + 1) = terrainVertexPosition.Y
+                vertices(vertexPointer * 3 + 2) = terrainVertexPosition.Z
 
                 Dim normal As Vector3 = calculateNormal(j, i)
                 normals(vertexPointer * 3) = normal.X
                 normals(vertexPointer * 3 + 1) = normal.Y
                 normals(vertexPointer * 3 + 2) = normal.Z
+
+                Dim upVector As Vector3 = New Vector3(0.0, 1.0, 0.0)
+                Dim normalDot = Vector3.Dot(normal, upVector)
+
+                ' If the terrain is not too sloped, add a tree
+                If normalDot > 0.77 Then
+                    treeComponent.AddObjectAtLocation(terrainVertexPosition)
+                End If
 
                 textures(vertexPointer * 2) = CType(j, Single) / CType(vertexWidthCount - 1, Single)
                 textures(vertexPointer * 2 + 1) = CType(i, Single) / CType(vertexHeightCount - 1, Single)
@@ -155,7 +173,10 @@ Public Class Terrain
 
     Private Function getHeight(x As Integer,
                                z As Integer) As Single
-        Return terrainNoise.Item(x, z) * sampleHeightmapMask(x, z)
+        Dim heightmapMaskVal = sampleHeightmapMask(x, z)
+        Dim height = terrainNoise.Item(x, z) * heightmapMaskVal
+
+        Return height
     End Function
 
     Private Function sampleHeightmapMask(ByVal x As Integer,

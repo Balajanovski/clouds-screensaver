@@ -15,6 +15,8 @@ Public Class TerrainComponent
 
     Private model As RawModel
 
+    Private objectComponent As TerrainObjectComponent
+
     Private shader As Shader
     Private shadowShader As Shader
 
@@ -56,13 +58,20 @@ Public Class TerrainComponent
         shader = New Shader(shaderVertSrc, shaderFragSrc)
         shadowShader = New Shader(shadowShaderVertexSrc, shadowShaderFragSrc)
 
+        Dim terrainPos = New Vector3(-(terrainWidth * terrainSampleDistance) * 0.5, earth.radius - 20, -(terrainWidth * terrainSampleDistance) * 0.5)
+
+        Dim modelMatrix = createModelMatrix(terrainPos)
+        objectComponent = New TerrainObjectComponent("ObjectShader.vert", "ObjectShader.frag", modelMatrix, amplitude, sun, cam, loader)
+
         terrain = New Terrain(terrainWidth,
                               terrainLength,
                               terrainAmplitude,
                               terrainSampleDistance,
                               "heightmapMask.jpg",
-                              New Vector3(-(terrainWidth * terrainSampleDistance) * 0.5, earth.radius - 20, -(terrainWidth * terrainSampleDistance) * 0.5),
-                              loader)
+                              terrainPos,
+                              loader,
+                              objectComponent)
+
 
         model = terrain.Model
 
@@ -109,6 +118,7 @@ Public Class TerrainComponent
         GL.DrawElements(BeginMode.Triangles, model.NumVertices, DrawElementsType.UnsignedInt, 0)
         unbindTexturedModel()
 
+        'treeComponent.DrawTrees()
 
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0)
         GL.Viewport(0, 0, DisplayDevice.Default.Width, DisplayDevice.Default.Height)
@@ -119,6 +129,7 @@ Public Class TerrainComponent
 
         prepareTerrain(terrain)
 
+        ' Set texture units
         shader.SetInt("grassTex", 0)
         shader.SetInt("healthyGrassTex", 1)
         shader.SetInt("patchyGrassTex", 2)
@@ -127,6 +138,7 @@ Public Class TerrainComponent
         shader.SetInt("rockNormalMap", 5)
         shader.SetInt("shadowMap", 6)
 
+        ' Bind textures
         GL.ActiveTexture(TextureUnit.Texture0)
         GL.BindTexture(TextureTarget.Texture2D, grassTexture)
         GL.ActiveTexture(TextureUnit.Texture1)
@@ -142,18 +154,25 @@ Public Class TerrainComponent
         GL.ActiveTexture(TextureUnit.Texture6)
         GL.BindTexture(TextureTarget.Texture2D, depthMap)
 
+        ' Set terrain texturing parameters
         shader.SetFloat("snowHeight", 80.0)
         shader.SetFloat("grassCoverage", 0.77)
+
+        ' Set sun and lighting related paramters
         shader.SetVec3("sunColor", sun.color)
         shader.SetVec3("sunDir", sun.lightDir)
 
+        ' Draw terrain
         GL.DrawElements(BeginMode.Triangles, model.NumVertices, DrawElementsType.UnsignedInt, 0)
 
         unbindTexturedModel()
+
+        ' Draw trees
+        objectComponent.DrawObjects()
     End Sub
 
     Private Sub prepareTerrain(ByRef terrain As Terrain)
-        GL.BindVertexArray(model.VAO)
+        GL.BindVertexArray(terrain.Model.VAO)
         GL.EnableVertexAttribArray(0)
         GL.EnableVertexAttribArray(1)
         GL.EnableVertexAttribArray(2)
@@ -166,12 +185,16 @@ Public Class TerrainComponent
         GL.BindVertexArray(0)
     End Sub
 
-    Private Sub loadModelMatrix(ByRef loadShader As Shader)
-        Dim pos = terrain.Position
+    Private Function createModelMatrix(terrainPos As Vector3) As Matrix4
         Dim modelMatrix = New Matrix4(1, 0, 0, 0,
                                       0, 1, 0, 0,
                                       0, 0, 1, 0,
-                                      pos.X, pos.Y, pos.Z, 1)
+                                      terrainPos.X, terrainPos.Y, terrainPos.Z, 1)
+        Return modelMatrix
+    End Function
+
+    Private Sub loadModelMatrix(ByRef loadShader As Shader)
+        Dim modelMatrix = createModelMatrix(terrain.Position)
 
         loadShader.SetMat4("modelMatrix", False, modelMatrix)
     End Sub

@@ -14,6 +14,8 @@
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -71,6 +73,9 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AssimpNet, Version=4.1.0.0, Culture=neutral, PublicKeyToken=0d51b391f59f42a6, processorArchitecture=MSIL">
+      <HintPath>..\packages\AssimpNet.4.1.0\lib\net40\AssimpNet.dll</HintPath>
+    </Reference>
     <Reference Include="OpenTK, Version=3.0.1.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>..\packages\OpenTK.3.0.1\lib\net20\OpenTK.dll</HintPath>
     </Reference>
@@ -106,7 +111,11 @@
     <Compile Include="EarthManager.vb" />
     <Compile Include="HDRComponent.vb" />
     <Compile Include="Terrain\Terrain.vb" />
+    <Compile Include="Terrain\TerrainObjectComponent.vb" />
     <Compile Include="Util\Loader.vb" />
+    <Compile Include="Util\Mesh.vb" />
+    <Compile Include="Util\Model.vb" />
+    <Compile Include="Util\ModelInstance.vb" />
     <Compile Include="Util\NoiseGenerator2D.vb" />
     <Compile Include="Util\NoiseGenerator3D.vb" />
     <Compile Include="Util\NoiseGeneratorBase.vb" />
@@ -174,6 +183,11 @@
     <EmbeddedResource Include="Shaders\Terrain.vert" />
     <EmbeddedResource Include="Shaders\DepthShader.vert" />
     <EmbeddedResource Include="Shaders\DepthShader.frag" />
+    <EmbeddedResource Include="Resources\fir1\firtree1.3ds" />
+    <EmbeddedResource Include="Shaders\ObjectShader.frag" />
+    <EmbeddedResource Include="Shaders\ObjectShader.vert" />
+    <EmbeddedResource Include="Resources\bush\bush01.obj" />
+    <EmbeddedResource Include="Resources\bush\texture_palm_128x128.tga" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\grass.jpg" />
@@ -189,5 +203,21 @@
     <EmbeddedResource Include="Resources\rock.jpg" />
     <EmbeddedResource Include="Resources\snow.jpg" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\fir1\nadeln4.jpg" />
+    <EmbeddedResource Include="Resources\fir1\nadeln4.png" />
+    <EmbeddedResource Include="Resources\fir1\nadeln4a.jpg" />
+    <EmbeddedResource Include="Resources\fir1\nadeln4a.png" />
+    <EmbeddedResource Include="Resources\fir1\stamm2.jpg" />
+    <EmbeddedResource Include="Resources\fir1\stamm2.png" />
+    <EmbeddedResource Include="Resources\fir1\stamm21.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
+  <Import Project="..\packages\AssimpNet.4.1.0\build\AssimpNet.targets" Condition="Exists('..\packages\AssimpNet.4.1.0\build\AssimpNet.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\AssimpNet.4.1.0\build\AssimpNet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\AssimpNet.4.1.0\build\AssimpNet.targets'))" />
+  </Target>
 </Project>

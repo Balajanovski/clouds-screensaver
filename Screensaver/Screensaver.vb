@@ -133,7 +133,7 @@ Public Class Screensaver
             sun.color = Lerp(ORANGE, WHITE, (sunYPos - 0.5) * 2.0)
         End If
 
-        volumetricComponent.PreRender(time)
+        volumetricComponent.Render(time)
         terrainComponent.RenderShadowMap()
 
         hdrComponent.Bind()
@@ -141,7 +141,7 @@ Public Class Screensaver
         GL.Enable(EnableCap.Blend)
         GL.Disable(EnableCap.DepthTest)
         scatteringComponent.Render(time)
-        volumetricComponent.Render()
+        volumetricComponent.Blit()
         terrainComponent.Render()
         GL.Disable(EnableCap.Blend)
         GL.Enable(EnableCap.DepthTest)

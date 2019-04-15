@@ -79,7 +79,7 @@ Public Class VolumetricComponent
         volumetricShader.FreeResources()
     End Sub
 
-    Public Sub PreRender(time As Single)
+    Public Sub Render(time As Single)
         volumetricShader.Use()
 
         ' Set uniforms
@@ -135,7 +135,7 @@ Public Class VolumetricComponent
         frameIter = (frameIter + 1) Mod 16
     End Sub
 
-    Public Sub Render()
+    Public Sub Blit()
         ' Blit volumetric clouds to screen with post processing
         postProcessClouds.Use()
         postProcessClouds.SetInt("textureToDraw", 0)
