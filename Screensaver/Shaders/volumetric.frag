@@ -477,7 +477,7 @@ void main() {
 	alphaness = vec4(cloudAlphaness, 0.0, 0.0, 1.0); // Output cloud alphaness to texture
 
 	// add sun glare to clouds
-	float sun = clamp( dot(sunDir,normalize(endPos - startPos)), 0.0, 1.0 );
+	float sun = clamp( dot(-sunDir,normalize(endPos - startPos)), 0.0, 1.0 );
 	vec3 s = 0.8 * vec3(1.0,0.4,0.2) * pow(sun, 256.0);
 	color.rgb += s * color.a;
 

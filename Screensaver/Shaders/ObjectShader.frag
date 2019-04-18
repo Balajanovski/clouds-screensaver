@@ -13,7 +13,7 @@ uniform vec3 sunColor;
 uniform vec3 sunDir;
 
 vec3 ambient(){
-	float ambientStrength = 0.3; 
+	float ambientStrength = 0.2; 
     vec3 ambient = ambientStrength * sunColor; 
     return ambient;
 }

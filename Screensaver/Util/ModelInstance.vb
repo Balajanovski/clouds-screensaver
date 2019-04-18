@@ -30,4 +30,9 @@ Public Class ModelInstance
         shader.SetMat4("model", False, modelMatrix)
         model.Draw(shader)
     End Sub
+
+    Public Sub Draw(ByRef shader As Shader, consistentModelMatrix As Matrix4)
+        shader.SetMat4("model", False, consistentModelMatrix)
+        model.Draw(shader)
+    End Sub
 End Class

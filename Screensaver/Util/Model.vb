@@ -34,6 +34,7 @@ Public Class Model
         Dim importer As AssimpContext = New AssimpContext()
         Dim scene As Scene = importer.ImportFileFromStream(modelStream, PostProcessSteps.Triangulate Or
                                                                         PostProcessSteps.FlipUVs Or
+                                                                        PostProcessSteps.GenerateNormals Or
                                                                         PostProcessSteps.CalculateTangentSpace)
 
         directory = path

@@ -13,21 +13,20 @@ out vec4 fragPosLightSpace;
 
 out vec3 toCameraVector;
 
-uniform mat4 modelMatrix;
+uniform mat4 model;
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
-uniform mat4 lightSpaceMatrix;
+uniform mat4 lightSpaceProjection;
+uniform mat4 lightSpaceView;
 
 void main() {
-	vec4 worldPos = modelMatrix * vec4(aPos, 1.0);
+	vec4 worldPos = model * vec4(aPos, 1.0);
 
-	gl_Position = projectionMatrix * viewMatrix * worldPos;
-
-	fragPosLightSpace = lightSpaceMatrix * vec4(worldPos.xyz, 1.0);
+	fragPosLightSpace = lightSpaceProjection * lightSpaceView * vec4(worldPos.xyz, 1.0);
 
 	texCoords = aTexCoords;
 
-	surfaceNormal = normalize((modelMatrix * vec4(aNormal, 0.0)).xyz);
+	surfaceNormal = mat3(transpose(inverse(model))) * aNormal;
 
 	// Calculate TBN matrix for normal mapping through using a clever assumption that the
 	// tangent's x-component must be 0, since the terrain is splatted-grid geometry
@@ -39,4 +38,6 @@ void main() {
 
 	toCameraVector = normalize(( inverse(viewMatrix) * vec4(0.0, 0.0, 0.0, 0.1) ).xyz - worldPos.xyz);
 	vPos = aPos;
+
+	gl_Position = projectionMatrix * viewMatrix * worldPos;
 }

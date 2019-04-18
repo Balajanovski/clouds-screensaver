@@ -101,7 +101,7 @@ Public Class Terrain
                 normals(vertexPointer * 3 + 2) = normal.Z
 
                 Dim upVector As Vector3 = New Vector3(0.0, 1.0, 0.0)
-                Dim normalDot = Vector3.Dot(normal, upVector)
+                Dim normalDot As Single = Math.Abs(Vector3.Dot(normal, upVector))
 
                 ' If the terrain is not too sloped, add a tree
                 If normalDot > 0.77 Then

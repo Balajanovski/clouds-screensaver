@@ -125,7 +125,7 @@ Public Class Screensaver
 
         Dim slowedTime As Single = time / 64
         Dim sunYPos As Single = Math.Abs(Math.Sin(2 * slowedTime))
-        sun.position = New Vector3(Math.Sin(slowedTime Mod (Math.PI / 2)), sunYPos - 0.25, Math.Cos(slowedTime Mod (Math.PI / 2)))
+        sun.position = New Vector3(Math.Sin(slowedTime Mod (Math.PI / 2)), sunYPos, Math.Cos(slowedTime Mod (Math.PI / 2)))
 
         If (sunYPos <= 0.5) Then
             sun.color = Lerp(GRAYISH_BLACK, ORANGE, sunYPos * 2.0)
@@ -134,7 +134,11 @@ Public Class Screensaver
         End If
 
         volumetricComponent.Render(time)
-        terrainComponent.RenderShadowMap()
+
+        ' Shadows not rendered if sun is too low in sky
+        If sun.position.Y > 0.08 Then
+            terrainComponent.RenderShadowMap()
+        End If
 
         hdrComponent.Bind()
         GL.Clear(ClearBufferMask.ColorBufferBit Or ClearBufferMask.DepthBufferBit)

@@ -123,7 +123,7 @@ float shadowCalculation(vec4 fragPosLightSpace) {
 	float currentDepth = projCoords.z;
 
 	float bias = max(0.05 * (1.0 - dot(surfaceNormal, sunDir)), 0.005); 
-	float shadow = currentDepth - bias >  closestDepth ? 1.0 : 0.0;
+	float shadow = currentDepth > closestDepth ? 1.0 : 0.0;
 
 	return shadow;
 }
@@ -137,5 +137,14 @@ void main() {
 
 	float shadow = 1.0 - shadowCalculation(fragPosLightSpace);
 
-	out_color = heightMaterial.color*vec4((amb + ((diff + spec) * shadow)) * vec3(1.0), 1.0);
+	// Perspective divide
+	vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+	// Transform to [0,1] range
+	projCoords = projCoords * 0.5 + 0.5;
+	
+	//out_color = vec4(vec3(projCoords.z), 1.0);
+	//out_color = vec4(vec3(projCoords.z, texture(shadowMap, projCoords.xy).r, 0.0), 1.0);
+	//out_color = vec4(vec3(texture(shadowMap, projCoords.xy).r), 1.0);
+	out_color = vec4(vec3(shadow), 1.0);
+	//out_color = heightMaterial.color*vec4((amb + ((diff + spec) * shadow)) * vec3(1.0), 1.0);
 }

@@ -18,7 +18,7 @@ void main() {
 	gl_Position = projection * view * worldPos;
 
     TexCoords = aTexCoords;    
-	surfaceNormal = aNormal;
+	surfaceNormal = transpose(inverse(mat3(model))) * aNormal;;
     
 	toCameraVector = normalize(( inverse(view) * vec4(0.0, 0.0, 0.0, 0.1) ).xyz - worldPos.xyz);
 }

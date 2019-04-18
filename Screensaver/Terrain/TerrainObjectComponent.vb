@@ -60,17 +60,26 @@ Public Class TerrainObjectComponent
     End Sub
 
     Public Sub DrawObjects()
+        Dim objectShaderUniformBinding =
+            Sub(objectShader As Shader)
+                objectShader.SetMat4("view", False, camera.ViewMatrix)
+                objectShader.SetMat4("projection", False, camera.ProjectionMatrix)
+
+                ' Set sun and lighting related paramters
+                objectShader.SetVec3("sunColor", sun.color)
+                objectShader.SetVec3("sunDir", sun.lightDir)
+            End Sub
+
+        DrawObjects(objectShader, objectShaderUniformBinding)
+    End Sub
+
+    Public Sub DrawObjects(ByRef shader As Shader, uniformBinding As Action(Of Shader))
         For Each obj In objects
-            objectShader.Use()
+            shader.Use()
 
-            objectShader.SetMat4("view", False, camera.ViewMatrix)
-            objectShader.SetMat4("projection", False, camera.ProjectionMatrix)
+            uniformBinding(shader)
 
-            ' Set sun and lighting related paramters
-            objectShader.SetVec3("sunColor", sun.color)
-            objectShader.SetVec3("sunDir", sun.lightDir)
-
-            obj.Draw(objectShader)
+            obj.Draw(shader)
         Next
     End Sub
 End Class

@@ -34,8 +34,13 @@ Public Class TerrainComponent
     Private depthMapFBO As Integer
     Private depthMap As Integer
 
-    Private Const SHADOW_WIDTH As Integer = 512
-    Private Const SHADOW_HEIGHT As Integer = 512
+    Private lightProjection As Matrix4
+    Private lightView As Matrix4
+
+    Private terrainModel As Matrix4
+
+    Private Const SHADOW_WIDTH As Integer = 8192
+    Private Const SHADOW_HEIGHT As Integer = 8192
 
     Public Sub New(shaderVertSrc As String,
                    shaderFragSrc As String,
@@ -111,15 +116,36 @@ Public Class TerrainComponent
         GL.Viewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT)
         GL.Enable(EnableCap.DepthTest)
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, depthMapFBO)
+        GL.Enable(EnableCap.CullFace)
+        GL.CullFace(CullFaceMode.Front)
+        GL.FrontFace(FrontFaceDirection.Ccw)
         GL.Clear(ClearBufferMask.DepthBufferBit)
-        configureShadowShaderAndMatrices()
 
-        prepareTerrain(terrain)
-        GL.DrawElements(BeginMode.Triangles, model.NumVertices, DrawElementsType.UnsignedInt, 0)
-        unbindTexturedModel()
+        shadowShader.Use()
 
-        'treeComponent.DrawTrees()
+        Dim shadowShaderUniformBinding =
+            Sub(shadowShader As Shader)
+                lightProjection = Matrix4.CreateOrthographic(240.0, 240.0, 0.2, 2500.0)
 
+                Dim lookAtPos = camera.Position + New Vector3(50, 0, 80)
+                Dim lightCamPos = (sun.position * 50.0) + camera.Position + New Vector3(50, 0, 80)
+                lightView = Matrix4.LookAt(lightCamPos, lookAtPos, New Vector3(0.0, 1.0, 0.0))
+                lightView *= Matrix4.CreateTranslation(New Vector3(-50, 0, -80))
+                shadowShader.SetMat4("lightSpaceProjection", False, lightProjection)
+                shadowShader.SetMat4("lightSpaceView", False, lightView)
+            End Sub
+
+        ' Draw terrain
+        'shadowShaderUniformBinding(shadowShader)
+        'loadModelMatrix(shadowShader)
+        'prepareTerrain(terrain)
+        'GL.DrawElements(BeginMode.Triangles, model.NumVertices, DrawElementsType.UnsignedInt, 0)
+        'unbindTexturedModel()
+
+        ' Draw randomly placed objects
+        objectComponent.DrawObjects(shadowShader, shadowShaderUniformBinding)
+
+        GL.Disable(EnableCap.CullFace)
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0)
         GL.Viewport(0, 0, DisplayDevice.Default.Width, DisplayDevice.Default.Height)
     End Sub
@@ -163,12 +189,14 @@ Public Class TerrainComponent
         shader.SetVec3("sunDir", sun.lightDir)
 
         ' Draw terrain
+        GL.Enable(EnableCap.DepthTest)
         GL.DrawElements(BeginMode.Triangles, model.NumVertices, DrawElementsType.UnsignedInt, 0)
 
         unbindTexturedModel()
 
-        ' Draw trees
+        ' Draw randomly placed objects
         objectComponent.DrawObjects()
+        GL.Disable(EnableCap.DepthTest)
     End Sub
 
     Private Sub prepareTerrain(ByRef terrain As Terrain)
@@ -194,9 +222,9 @@ Public Class TerrainComponent
     End Function
 
     Private Sub loadModelMatrix(ByRef loadShader As Shader)
-        Dim modelMatrix = createModelMatrix(terrain.Position)
+        terrainModel = createModelMatrix(terrain.Position)
 
-        loadShader.SetMat4("modelMatrix", False, modelMatrix)
+        loadShader.SetMat4("model", False, terrainModel)
     End Sub
 
     Private Sub configureShaderAndMatrices()
@@ -206,17 +234,7 @@ Public Class TerrainComponent
         loadModelMatrix(shader)
         shader.SetMat4("viewMatrix", False, camera.ViewMatrix)
         shader.SetMat4("projectionMatrix", False, camera.ProjectionMatrix)
-    End Sub
-
-    Private Sub configureShadowShaderAndMatrices()
-        shadowShader.Use()
-
-        ' Send transformation matrix to shader
-        loadModelMatrix(shadowShader)
-        Dim lightProjection = Matrix4.CreateOrthographic(DisplayDevice.Default.Width,
-                      DisplayDevice.Default.Height, 1.0, 512.0)
-        Dim lightView = Matrix4.LookAt(sun.position * 100.0 + New Vector3(0, earth.radius, 0), New Vector3(0.0, 0.0, 0.0), New Vector3(0.0, 1.0, 0.0))
-        shadowShader.SetMat4("lightSpaceProjection", False, lightProjection)
-        shadowShader.SetMat4("lightSpaceView", False, lightView)
+        shader.SetMat4("lightSpaceProjection", False, lightProjection)
+        shader.SetMat4("lightSpaceView", False, lightView)
     End Sub
 End Class
