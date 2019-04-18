@@ -39,8 +39,8 @@ Public Class TerrainComponent
 
     Private terrainModel As Matrix4
 
-    Private Const SHADOW_WIDTH As Integer = 8192
-    Private Const SHADOW_HEIGHT As Integer = 8192
+    Private Const SHADOW_WIDTH As Integer = 4096
+    Private Const SHADOW_HEIGHT As Integer = 4096
 
     Public Sub New(shaderVertSrc As String,
                    shaderFragSrc As String,
@@ -134,13 +134,6 @@ Public Class TerrainComponent
                 shadowShader.SetMat4("lightSpaceProjection", False, lightProjection)
                 shadowShader.SetMat4("lightSpaceView", False, lightView)
             End Sub
-
-        ' Draw terrain
-        'shadowShaderUniformBinding(shadowShader)
-        'loadModelMatrix(shadowShader)
-        'prepareTerrain(terrain)
-        'GL.DrawElements(BeginMode.Triangles, model.NumVertices, DrawElementsType.UnsignedInt, 0)
-        'unbindTexturedModel()
 
         ' Draw randomly placed objects
         objectComponent.DrawObjects(shadowShader, shadowShaderUniformBinding)

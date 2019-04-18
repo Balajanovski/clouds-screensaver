@@ -101,7 +101,7 @@ vec3 ambient(){
 }
 
 vec3 diffuse(vec3 normal){
-	float diffuseFactor = max(0.0, dot(sunDir, normal));
+	float diffuseFactor = max(0.0, dot(-sunDir, normal));
 	const float diffuseConst = 0.75;
 	vec3 diffuse = diffuseFactor * sunColor * diffuseConst;
 	return diffuse;
@@ -109,7 +109,7 @@ vec3 diffuse(vec3 normal){
 
 vec3 specular(vec3 normal){
 	float specularFactor = 0.01f;
-	vec3 reflectDir = reflect(-sunDir, normal);  
+	vec3 reflectDir = reflect(sunDir, normal);  
 	float spec = pow(max(dot(toCameraVector, reflectDir), 0.0), 32.0);
 	vec3 specular = spec * sunColor*specularFactor; 
 	return specular;
@@ -122,8 +122,20 @@ float shadowCalculation(vec4 fragPosLightSpace) {
 	float closestDepth = texture(shadowMap, projCoords.xy).r;
 	float currentDepth = projCoords.z;
 
-	float bias = max(0.05 * (1.0 - dot(surfaceNormal, sunDir)), 0.005); 
-	float shadow = currentDepth > closestDepth ? 1.0 : 0.0;
+	//float shadow = currentDepth - 0.00005 > closestDepth ? 1.0 : 0.0;
+	float shadow = 0.0;
+	vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+	for (int x = -1; x <= 1; ++x) {
+		for (int y = -1; y <= 1; ++y) {
+			float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x,y) * texelSize).r;
+			shadow += currentDepth - 0.0005 > pcfDepth ? 1.0 : 0.0;
+		}
+	}
+	shadow /= 9.0;
+
+	if (projCoords.z > 1.0) {
+		shadow = 0.0;
+	}
 
 	return shadow;
 }
@@ -145,6 +157,6 @@ void main() {
 	//out_color = vec4(vec3(projCoords.z), 1.0);
 	//out_color = vec4(vec3(projCoords.z, texture(shadowMap, projCoords.xy).r, 0.0), 1.0);
 	//out_color = vec4(vec3(texture(shadowMap, projCoords.xy).r), 1.0);
-	out_color = vec4(vec3(shadow), 1.0);
-	//out_color = heightMaterial.color*vec4((amb + ((diff + spec) * shadow)) * vec3(1.0), 1.0);
+	//out_color = vec4(vec3(shadow), 1.0);
+	out_color = heightMaterial.color*vec4((amb + ((diff + spec) * shadow)) * vec3(1.0), 1.0);
 }
