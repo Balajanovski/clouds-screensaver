@@ -1,5 +1,6 @@
 ﻿#version 330 core
-out vec4 FragColor;
+layout (location = 0) out vec4 FragColor;
+layout (location = 1) out vec4 occlusionTex;
 
 in vec2 TexCoords;
 
@@ -41,5 +42,6 @@ void main() {
 	vec3 diff = diffuse(norm);
 	vec3 spec = specular(norm);
 
+	occlusionTex = vec4(1.0);
 	FragColor = objectColor*vec4(amb + diff + spec, 1.0);
 }

@@ -23,6 +23,9 @@ Public Class Screensaver
     ' Rasteurized randomly generated terrain
     Private terrainComponent As TerrainComponent
 
+    ' God / crepuscular rays
+    Private godRaysComponent As GodRaysComponent
+
     ' High Dynamic Range
     Private hdrComponent As HDRComponent
 
@@ -64,8 +67,9 @@ Public Class Screensaver
                             DisplayDevice.Default.Width, DisplayDevice.Default.Height)
         scatteringComponent = New ScatteringComponent("ScreenQuadRenderer.vert", "scattering.frag", screenQuadRenderer, camera, earth, sun)
         volumetricComponent = New VolumetricComponent("ScreenQuadRenderer.vert", "volumetric.frag", screenQuadRenderer, camera, earth, sun)
-        terrainComponent = New TerrainComponent("Terrain.vert", "Terrain.frag", "DepthShader.vert", "DepthShader.frag", 2000, 2000, 100.0, 1.5, camera, earth, sun, loader)
+        terrainComponent = New TerrainComponent("Terrain.vert", "Terrain.frag", "DepthShader.vert", "DepthShader.frag", 2000, 2000, 100.0, 1.5, camera, earth, sun, screenQuadRenderer, loader)
         hdrComponent = New HDRComponent("ScreenQuadRenderer.vert", "hdr.frag", -0.8, screenQuadRenderer)
+        godRaysComponent = New GodRaysComponent("ScreenQuadRenderer.vert", "GodRays.frag", screenQuadRenderer)
     End Sub
 
     Protected Overrides Sub OnResize(e As EventArgs)
@@ -133,12 +137,15 @@ Public Class Screensaver
             sun.color = Lerp(ORANGE, WHITE, (sunYPos - 0.5) * 2.0)
         End If
 
-        volumetricComponent.Render(time)
-
         ' Shadows not rendered if sun is too low in sky
         If sun.position.Y > 0.08 Then
             terrainComponent.RenderShadowMap()
         End If
+
+        terrainComponent.Render()
+        volumetricComponent.Render(time)
+        godRaysComponent.Render(terrainComponent.OcclusionTexture,
+                                volumetricComponent.OcclusionTexture)
 
         hdrComponent.Bind()
         GL.Clear(ClearBufferMask.ColorBufferBit Or ClearBufferMask.DepthBufferBit)
@@ -146,7 +153,7 @@ Public Class Screensaver
         GL.Disable(EnableCap.DepthTest)
         scatteringComponent.Render(time)
         volumetricComponent.Blit()
-        terrainComponent.Render()
+        terrainComponent.Blit()
         GL.Disable(EnableCap.Blend)
         GL.Enable(EnableCap.DepthTest)
         hdrComponent.UnBind()

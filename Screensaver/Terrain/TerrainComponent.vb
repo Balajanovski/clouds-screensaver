@@ -17,6 +17,8 @@ Public Class TerrainComponent
 
     Private objectComponent As TerrainObjectComponent
 
+    Private terrainFrameBufferComponent As TerrainFrameBufferComponent
+
     Private shader As Shader
     Private shadowShader As Shader
 
@@ -39,6 +41,13 @@ Public Class TerrainComponent
 
     Private terrainModel As Matrix4
 
+    ' For blitting the rendered textures to the screen
+    Dim quadRenderer As ScreenQuadRenderer
+    Dim textureBlitterShader As Shader
+
+    Dim terrainResolutionWidth As Integer
+    Dim terrainResolutionHeight As Integer
+
     Private Const SHADOW_WIDTH As Integer = 4096
     Private Const SHADOW_HEIGHT As Integer = 4096
 
@@ -53,12 +62,18 @@ Public Class TerrainComponent
                    ByRef cam As Camera,
                    ByRef earthManager As EarthManager,
                    ByRef sunManager As SunManager,
+                   ByRef screenQuadRenderer As ScreenQuadRenderer,
                    ByRef loaderComponent As Loader)
         camera = cam
         earth = earthManager
         sun = sunManager
         loader = loaderComponent
         amplitude = terrainAmplitude
+        terrainResolutionWidth = DisplayDevice.Default.Width
+        terrainResolutionHeight = DisplayDevice.Default.Height
+        terrainFrameBufferComponent = New TerrainFrameBufferComponent(terrainResolutionWidth, terrainResolutionHeight)
+        quadRenderer = screenQuadRenderer
+        textureBlitterShader = New Shader("ScreenQuadRenderer.vert", "BlitTextureToScreen.frag")
 
         shader = New Shader(shaderVertSrc, shaderFragSrc)
         shadowShader = New Shader(shadowShaderVertexSrc, shadowShaderFragSrc)
@@ -140,7 +155,7 @@ Public Class TerrainComponent
 
         GL.Disable(EnableCap.CullFace)
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0)
-        GL.Viewport(0, 0, DisplayDevice.Default.Width, DisplayDevice.Default.Height)
+        GL.Viewport(0, 0, terrainResolutionWidth, terrainResolutionHeight)
     End Sub
 
     Public Sub Render()
@@ -182,6 +197,7 @@ Public Class TerrainComponent
         shader.SetVec3("sunDir", sun.lightDir)
 
         ' Draw terrain
+        terrainFrameBufferComponent.Bind()
         GL.Enable(EnableCap.DepthTest)
         GL.DrawElements(BeginMode.Triangles, model.NumVertices, DrawElementsType.UnsignedInt, 0)
 
@@ -189,7 +205,16 @@ Public Class TerrainComponent
 
         ' Draw randomly placed objects
         objectComponent.DrawObjects()
+        terrainFrameBufferComponent.UnBind()
         GL.Disable(EnableCap.DepthTest)
+    End Sub
+
+    Public Sub Blit()
+        textureBlitterShader.Use()
+        textureBlitterShader.SetInt("textureToDraw", 0)
+        GL.ActiveTexture(TextureUnit.Texture0)
+        GL.BindTexture(TextureTarget.Texture2D, terrainFrameBufferComponent.currentFrame)
+        quadRenderer.Render()
     End Sub
 
     Private Sub prepareTerrain(ByRef terrain As Terrain)
@@ -230,4 +255,11 @@ Public Class TerrainComponent
         shader.SetMat4("lightSpaceProjection", False, lightProjection)
         shader.SetMat4("lightSpaceView", False, lightView)
     End Sub
+
+    ' Allow retrieval of terrain occlusion for God rays
+    Public ReadOnly Property OcclusionTexture As Integer
+        Get
+            Return terrainFrameBufferComponent.occlusionBuffer
+        End Get
+    End Property
 End Class

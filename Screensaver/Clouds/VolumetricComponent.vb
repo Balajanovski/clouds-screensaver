@@ -144,4 +144,11 @@ Public Class VolumetricComponent
         GL.BindTexture(TextureTarget.Texture2D, temporalProjection.currentFrame)
         quadRenderer.Render()
     End Sub
+
+    ' Allow retrieval of cloud occlusion for God rays
+    Public ReadOnly Property OcclusionTexture As Integer
+        Get
+            Return temporalProjection.lastFrameAlphaness
+        End Get
+    End Property
 End Class

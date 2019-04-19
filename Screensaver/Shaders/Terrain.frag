@@ -17,7 +17,8 @@ uniform sampler2D shadowMap;
 uniform float snowHeight;
 uniform float grassCoverage;
 
-out vec4 out_color;
+layout (location = 0) out vec4 out_color;
+layout (location = 1) out vec4 occlusionTex;
 
 struct MaterialProperties {
 	vec4 color;
@@ -158,5 +159,6 @@ void main() {
 	//out_color = vec4(vec3(projCoords.z, texture(shadowMap, projCoords.xy).r, 0.0), 1.0);
 	//out_color = vec4(vec3(texture(shadowMap, projCoords.xy).r), 1.0);
 	//out_color = vec4(vec3(shadow), 1.0);
+	occlusionTex = vec4(1.0);
 	out_color = heightMaterial.color*vec4((amb + ((diff + spec) * shadow)) * vec3(1.0), 1.0);
 }

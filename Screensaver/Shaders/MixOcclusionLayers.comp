@@ -1,0 +1,18 @@
+﻿#version 440 core
+layout(local_size_x = 1, local_size_y = 1) in;
+layout(r16f, binding = 0) uniform image2D mixedOcclusion;
+
+uniform sampler2D terrainOcclusion;
+uniform sampler2D cloudOcclusion;
+
+void main() {
+	vec3 pixelValue = vec3(0.0);
+	// get x, y pos in texture
+	ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
+	vec2 c = vec2(float(pixelCoords.x)/float(gl_NumWorkGroups.x), 
+				  float(pixelCoords.y)/float(gl_NumWorkGroups.y));
+
+	pixelValue = vec3(min(texture(terrainOcclusion, c).r + texture(cloudOcclusion, c).r, 1.0));
+
+	imageStore(mixedOcclusion, pixelCoords, vec4(pixelValue, 1.0));
+}

@@ -109,8 +109,10 @@
   <ItemGroup>
     <Compile Include="Camera.vb" />
     <Compile Include="EarthManager.vb" />
+    <Compile Include="GodRaysComponent.vb" />
     <Compile Include="HDRComponent.vb" />
     <Compile Include="Terrain\Terrain.vb" />
+    <Compile Include="Terrain\TerrainFrameBufferComponent.vb" />
     <Compile Include="Terrain\TerrainObjectComponent.vb" />
     <Compile Include="Util\Loader.vb" />
     <Compile Include="Util\Mesh.vb" />
@@ -188,6 +190,9 @@
     <EmbeddedResource Include="Shaders\ObjectShader.vert" />
     <EmbeddedResource Include="Resources\bush\bush01.obj" />
     <EmbeddedResource Include="Resources\bush\texture_palm_128x128.tga" />
+    <EmbeddedResource Include="Shaders\BlitTextureToScreen.frag" />
+    <EmbeddedResource Include="Shaders\MixOcclusionLayers.comp" />
+    <EmbeddedResource Include="Shaders\GodRays.frag" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\grass.jpg" />
