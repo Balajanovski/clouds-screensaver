@@ -143,7 +143,7 @@ Public Class TerrainComponent
                 lightProjection = Matrix4.CreateOrthographic(240.0, 240.0, 0.2, 2500.0)
 
                 Dim lookAtPos = camera.Position + New Vector3(50, 0, 80)
-                Dim lightCamPos = (sun.position * 50.0) + camera.Position + New Vector3(50, 0, 80)
+                Dim lightCamPos = (sun.position * 1000.0) + camera.Position + New Vector3(50, 0, 80)
                 lightView = Matrix4.LookAt(lightCamPos, lookAtPos, New Vector3(0.0, 1.0, 0.0))
                 lightView *= Matrix4.CreateTranslation(New Vector3(-50, 0, -80))
                 shadowShader.SetMat4("lightSpaceProjection", False, lightProjection)

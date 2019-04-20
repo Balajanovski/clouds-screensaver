@@ -69,7 +69,7 @@ Public Class Screensaver
         volumetricComponent = New VolumetricComponent("ScreenQuadRenderer.vert", "volumetric.frag", screenQuadRenderer, camera, earth, sun)
         terrainComponent = New TerrainComponent("Terrain.vert", "Terrain.frag", "DepthShader.vert", "DepthShader.frag", 2000, 2000, 100.0, 1.5, camera, earth, sun, screenQuadRenderer, loader)
         hdrComponent = New HDRComponent("ScreenQuadRenderer.vert", "hdr.frag", -0.8, screenQuadRenderer)
-        godRaysComponent = New GodRaysComponent("ScreenQuadRenderer.vert", "GodRays.frag", screenQuadRenderer)
+        godRaysComponent = New GodRaysComponent("ScreenQuadRenderer.vert", "GodRays.frag", sun, camera, screenQuadRenderer)
     End Sub
 
     Protected Overrides Sub OnResize(e As EventArgs)

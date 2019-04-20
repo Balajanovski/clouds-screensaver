@@ -11,6 +11,10 @@ Public Class GodRaysComponent
     Private quadRenderer As ScreenQuadRenderer
     Private godRaysShader As Shader
 
+    Private sun As SunManager
+
+    Private camera As Camera
+
     Private Function mergeOcclusionTextures(terrainOcclusionTex As Integer,
                                             cloudOcclusionTex As Integer) As Integer
         ' Generate texture
@@ -41,15 +45,30 @@ Public Class GodRaysComponent
 
     Public Sub New(vertexShaderSrc As String,
                    fragmentShaderSrc As String,
+                   ByRef sunmanager As SunManager,
+                   ByRef cam As Camera,
                    ByRef screenQuadRenderer As ScreenQuadRenderer)
         godRaysWidth = DisplayDevice.Default.Width
         godRaysHeight = DisplayDevice.Default.Height
         quadRenderer = screenQuadRenderer
+        sun = sunmanager
+        camera = cam
+
         mergeShader = New ComputeShader("MixOcclusionLayers.comp")
         godRaysShader = New Shader(vertexShaderSrc, fragmentShaderSrc)
     End Sub
 
+    Private Sub convertPointToScreenSpace(point As Vector3)
+        Dim screenSpacePoint As Vector2 = camera.Project(point)
+
+
+    End Sub
+
     Public Sub Render(terrainOcclusionTex As Integer, cloudOcclusionTex As Integer)
         mergedOcclusion = mergeOcclusionTextures(terrainOcclusionTex, cloudOcclusionTex)
+
+        Dim sunPos = sun.position + camera.Position
+        Dim sunScreenPos = camera.Project(sunPos)
+
     End Sub
 End Class
