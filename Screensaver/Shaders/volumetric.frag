@@ -30,6 +30,9 @@ uniform sampler2D curlNoise;
 uniform sampler2D lastFrame;
 uniform sampler2D lastFrameAlphaness;
 
+// Terrain occlusion, for excluding texels from calculations as an optimization
+uniform sampler2D terrainOcclusion;
+
 // Frame iteration counter for temporal reprojection mod 16
 uniform int frameIter;
 
@@ -417,6 +420,14 @@ float threshold(float v, float t) {
 }
 
 void main() {
+	// Check if texel is occluded by terrain -- early exit if true
+	if (texture(terrainOcclusion, computeScreenPos(computeClipSpaceCoord().xy)).r > 0.0) {
+		out_color = vec4(0.0, 0.0, 0.0, 0.0);
+		cloudColor = vec4(0.0, 0.0, 0.0, 0.0);
+		alphaness = vec4(vec3(texture(terrainOcclusion, computeScreenPos(computeClipSpaceCoord().xy)).r), 1.0);
+		return;
+	}
+
 	// Compute Ray Direction
 	vec4 rayClip = vec4(computeClipSpaceCoord(), 1.0);
 	vec4 rayView = inverseProjection * rayClip;
@@ -475,6 +486,8 @@ void main() {
 
 	float cloudAlphaness = threshold(color.a, 0.2);
 	alphaness = vec4(cloudAlphaness, 0.0, 0.0, 1.0); // Output cloud alphaness to texture
+	alphaness += texture(terrainOcclusion, computeScreenPos(computeClipSpaceCoord().xy)).r; // Add terrain occlusion to alphaness texture
+	alphaness = clamp(alphaness, 0.0, 1.0);
 
 	// add sun glare to clouds
 	float sun = clamp( dot(-sunDir,normalize(endPos - startPos)), 0.0, 1.0 );

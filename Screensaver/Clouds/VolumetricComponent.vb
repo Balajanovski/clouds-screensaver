@@ -79,7 +79,7 @@ Public Class VolumetricComponent
         volumetricShader.FreeResources()
     End Sub
 
-    Public Sub Render(time As Single)
+    Public Sub Render(time As Single, terrainOcclusionTex As Integer)
         volumetricShader.Use()
 
         ' Set uniforms
@@ -108,6 +108,7 @@ Public Class VolumetricComponent
         volumetricShader.SetInt("worleyNoise", 4)
         volumetricShader.SetInt("lastFrame", 5)
         volumetricShader.SetInt("lastFrameAlphaness", 6)
+        volumetricShader.SetInt("terrainOcclusion", 7)
 
         ' Activate texture units
         GL.ActiveTexture(TextureUnit.Texture1)
@@ -122,6 +123,8 @@ Public Class VolumetricComponent
         GL.BindTexture(TextureTarget.Texture2D, temporalProjection.lastFrame)
         GL.ActiveTexture(TextureUnit.Texture6)
         GL.BindTexture(TextureTarget.Texture2D, temporalProjection.lastFrameAlphaness)
+        GL.ActiveTexture(TextureUnit.Texture7)
+        GL.BindTexture(TextureTarget.Texture2D, terrainOcclusionTex)
 
         ' Cache view projection matrix for temporal reprojection
         oldViewProjection = camera.ProjectionMatrix * camera.ViewMatrix

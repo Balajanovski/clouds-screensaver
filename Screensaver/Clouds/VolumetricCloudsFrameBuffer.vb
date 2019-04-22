@@ -2,13 +2,11 @@
 Imports OpenTK.Graphics.OpenGL4
 
 Public Class VolumetricCloudsFrameBuffer
-    Private volumetricCloudsFrameBuffer As Integer
+    Inherits FrameBufferComponentBase
+
     Private currentFrameTex As Integer
     Private lastFrameTex As Integer
     Private alphanessTex As Integer
-
-    Private resWidth As Integer
-    Private resHeight As Integer
 
     Public Sub New(resolutionWidth As Integer, resolutionHeight As Integer)
         resWidth = resolutionWidth
@@ -16,10 +14,10 @@ Public Class VolumetricCloudsFrameBuffer
 
         ' Configure Volumetric Clouds Buffer
         ' -------------------------
-        volumetricCloudsFrameBuffer = GL.GenFramebuffer()
+        framebuffer = GL.GenFramebuffer()
 
         ' Create color buffers
-        GL.BindFramebuffer(FramebufferTarget.Framebuffer, volumetricCloudsFrameBuffer)
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer, framebuffer)
         currentFrameTex = GL.GenTexture()
         GL.ActiveTexture(TextureUnit.Texture0)
         GL.BindTexture(TextureTarget.Texture2D, currentFrameTex)
@@ -56,18 +54,6 @@ Public Class VolumetricCloudsFrameBuffer
                                         FramebufferAttachment.ColorAttachment1,
                                         FramebufferAttachment.ColorAttachment2}
         GL.DrawBuffers(attachments.Length, attachments)
-    End Sub
-
-    Public Sub Bind()
-        GL.BindFramebuffer(FramebufferTarget.Framebuffer, volumetricCloudsFrameBuffer)
-        GL.Viewport(0, 0, resWidth, resHeight)
-        GL.Enable(EnableCap.DepthTest)
-    End Sub
-
-    Public Sub UnBind()
-        GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0)
-        GL.Viewport(0, 0, DisplayDevice.Default.Width, DisplayDevice.Default.Height)
-        GL.Disable(EnableCap.DepthTest)
     End Sub
 
     Public ReadOnly Property lastFrame As Integer

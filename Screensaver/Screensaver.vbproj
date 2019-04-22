@@ -76,9 +76,6 @@
     <Reference Include="AssimpNet, Version=4.1.0.0, Culture=neutral, PublicKeyToken=0d51b391f59f42a6, processorArchitecture=MSIL">
       <HintPath>..\packages\AssimpNet.4.1.0\lib\net40\AssimpNet.dll</HintPath>
     </Reference>
-    <Reference Include="GlmNet, Version=0.5.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\GlmNet.0.5.1.0\lib\net40\GlmNet.dll</HintPath>
-    </Reference>
     <Reference Include="OpenTK, Version=3.0.1.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>..\packages\OpenTK.3.0.1\lib\net20\OpenTK.dll</HintPath>
     </Reference>
@@ -112,11 +109,13 @@
   <ItemGroup>
     <Compile Include="Camera.vb" />
     <Compile Include="EarthManager.vb" />
-    <Compile Include="GodRaysComponent.vb" />
+    <Compile Include="GodRays\GodRaysComponent.vb" />
+    <Compile Include="GodRays\GodRaysFrameBufferComponent.vb" />
     <Compile Include="HDRComponent.vb" />
     <Compile Include="Terrain\Terrain.vb" />
     <Compile Include="Terrain\TerrainFrameBufferComponent.vb" />
     <Compile Include="Terrain\TerrainObjectComponent.vb" />
+    <Compile Include="Util\FrameBufferComponentBase.vb" />
     <Compile Include="Util\Loader.vb" />
     <Compile Include="Util\Mesh.vb" />
     <Compile Include="Util\Model.vb" />
@@ -194,7 +193,6 @@
     <EmbeddedResource Include="Resources\bush\bush01.obj" />
     <EmbeddedResource Include="Resources\bush\texture_palm_128x128.tga" />
     <EmbeddedResource Include="Shaders\BlitTextureToScreen.frag" />
-    <EmbeddedResource Include="Shaders\MixOcclusionLayers.comp" />
     <EmbeddedResource Include="Shaders\GodRays.frag" />
   </ItemGroup>
   <ItemGroup>

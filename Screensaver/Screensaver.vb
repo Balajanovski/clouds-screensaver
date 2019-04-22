@@ -143,9 +143,8 @@ Public Class Screensaver
         End If
 
         terrainComponent.Render()
-        volumetricComponent.Render(time)
-        godRaysComponent.Render(terrainComponent.OcclusionTexture,
-                                volumetricComponent.OcclusionTexture)
+        volumetricComponent.Render(time, terrainComponent.OcclusionTexture)
+        godRaysComponent.Render(volumetricComponent.OcclusionTexture)
 
         hdrComponent.Bind()
         GL.Clear(ClearBufferMask.ColorBufferBit Or ClearBufferMask.DepthBufferBit)
@@ -159,7 +158,7 @@ Public Class Screensaver
         hdrComponent.UnBind()
 
         GL.Clear(ClearBufferMask.ColorBufferBit)
-        hdrComponent.Render()
+        hdrComponent.Render(godRaysComponent.CurrentFrame)
 
         SwapBuffers()
     End Sub

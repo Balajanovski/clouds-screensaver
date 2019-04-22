@@ -2,23 +2,21 @@
 Imports OpenTK.Graphics.OpenGL4
 
 Public Class TerrainFrameBufferComponent
-    Private terrainFrameBuffer As Integer
+    Inherits FrameBufferComponentBase
+
     Private currentFrameTex As Integer
     Private occlusionTex As Integer
-
-    Private resWidth As Integer
-    Private resHeight As Integer
 
     Public Sub New(resolutionWidth As Integer, resolutionHeight As Integer)
         resWidth = resolutionWidth
         resHeight = resolutionHeight
 
-        ' Configure Volumetric Clouds Buffer
+        ' Configure Terrain Buffer
         ' -------------------------
-        terrainFrameBuffer = GL.GenFramebuffer()
+        framebuffer = GL.GenFramebuffer()
 
         ' Create color buffers
-        GL.BindFramebuffer(FramebufferTarget.Framebuffer, terrainFrameBuffer)
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer, framebuffer)
         currentFrameTex = GL.GenTexture()
         GL.ActiveTexture(TextureUnit.Texture0)
         GL.BindTexture(TextureTarget.Texture2D, currentFrameTex)
@@ -43,18 +41,6 @@ Public Class TerrainFrameBufferComponent
         Dim attachments() As Integer = {FramebufferAttachment.ColorAttachment0,
                                         FramebufferAttachment.ColorAttachment1}
         GL.DrawBuffers(attachments.Length, attachments)
-    End Sub
-
-    Public Sub Bind()
-        GL.BindFramebuffer(FramebufferTarget.Framebuffer, terrainFrameBuffer)
-        GL.Viewport(0, 0, resWidth, resHeight)
-        GL.Enable(EnableCap.DepthTest)
-    End Sub
-
-    Public Sub UnBind()
-        GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0)
-        GL.Viewport(0, 0, DisplayDevice.Default.Width, DisplayDevice.Default.Height)
-        GL.Disable(EnableCap.DepthTest)
     End Sub
 
     Public ReadOnly Property currentFrame As Integer

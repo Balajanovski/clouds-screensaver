@@ -6,12 +6,13 @@ in vec2 TexCoords;
 in vec3 vPos;
 
 uniform sampler2D hdrBuffer;
+uniform sampler2D godRaysTex;
 
 uniform float exposure;
 
 void main() {             
     const float gamma = 1.8;
-    vec3 hdrColor = texture(hdrBuffer, TexCoords).rgb;
+    vec3 hdrColor = texture(hdrBuffer, TexCoords).rgb * texture(godRaysTex, TexCoords).r;
   
     // Exposure tone mapping
     vec3 mapped = vec3(1.0) - exp(-hdrColor * exposure);

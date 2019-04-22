@@ -1,5 +1,4 @@
 ﻿Imports OpenTK
-Imports GlmNet
 Imports OpenTK.Graphics.OpenGL4
 
 Public Class Camera
@@ -54,33 +53,20 @@ Public Class Camera
         End Get
     End Property
 
-    Private Shared Function opentkVecToGLMVec(tk As Vector4) As vec4
-        Return New vec4(tk.X, tk.Y, tk.Z, tk.W)
-    End Function
-
-    Private Shared Function opentkVecToGLMVec(tk As Vector3) As vec3
-        Return New vec3(tk.X, tk.Y, tk.Z)
-    End Function
-
-    Private Shared Function opentkMatToGLMMat(tk As Matrix4) As mat4
-        Return New mat4(opentkVecToGLMVec(tk.Row0),
-                        opentkVecToGLMVec(tk.Row1),
-                        opentkVecToGLMVec(tk.Row2),
-                        opentkVecToGLMVec(tk.Row3))
-    End Function
-
     ' Project world space coords into screen space
-    Public Function Project(wordSpacePos As Vector3) As Vector2
-        Dim obj As vec3 = opentkVecToGLMVec(wordSpacePos)
-        Dim viewMat As mat4 = opentkMatToGLMMat(view)
-        Dim projMat As mat4 = opentkMatToGLMMat(projection)
+    Public Function Project(worldSpacePos As Vector3) As Vector2
+        Dim v = New Vector4(worldSpacePos, 1.0)
+        v = Vector4.Transform(v, view)
+        v = Vector4.Transform(v, projection)
 
-        Dim viewportArr(4) As Integer
-        GL.GetInteger(GetPName.Viewport, viewportArr)
-        Dim viewport As vec4 = New vec4(viewportArr(0), viewportArr(1), viewportArr(2), viewportArr(3))
+        ' Perspective division
+        v /= v.Z
 
-        Dim screenCoords = glm.project(obj, viewMat, projMat, viewport)
-        Return New Vector2(screenCoords.x, screenCoords.y)
+        ' Scale coords from range [-1, +1] to range [0, +1]
+        v += New Vector4(1.0, 1.0, 0.0, 0.0)
+        v *= 0.5
+
+        Return New Vector2(v.X, v.Y)
     End Function
 
     Public Sub New(newPos As Vector3,

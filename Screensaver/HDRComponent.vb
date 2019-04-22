@@ -64,16 +64,19 @@ Public Class HDRComponent
         GL.Disable(EnableCap.DepthTest)
     End Sub
 
-    Public Sub Render()
+    Public Sub Render(godRaysTex As Integer)
         GL.Clear(ClearBufferMask.ColorBufferBit Or ClearBufferMask.DepthBufferBit)
         hdrShader.Use()
 
         ' Set uniforms
         hdrShader.SetInt("hdrBuffer", 0)
+        hdrShader.SetInt("godRaysTex", 1)
         hdrShader.SetFloat("exposure", exposure)
 
         GL.ActiveTexture(TextureUnit.Texture0)
         GL.BindTexture(TextureTarget.Texture2D, colorBuffer)
+        GL.ActiveTexture(TextureUnit.Texture1)
+        GL.BindTexture(TextureTarget.Texture2D, godRaysTex)
         quadRenderer.Render()
     End Sub
 
