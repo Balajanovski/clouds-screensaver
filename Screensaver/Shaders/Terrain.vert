@@ -32,9 +32,14 @@ void main() {
 	// tangent's x-component must be 0, since the terrain is splatted-grid geometry
 	// Assumption from: https://www.gamedev.net/forums/topic/651083-tangents-for-heightmap-from-limited-information/
 	vec3 tempTangent = vec3(0, 0, 1);
-	vec3 surfaceBitTangent = cross(tempTangent, surfaceNormal);
-	vec3 surfaceTangent = cross(surfaceNormal, surfaceBitTangent);
-	TBN = mat3(surfaceTangent, surfaceBitTangent, surfaceNormal);
+	vec3 aBitangent = cross(tempTangent, aNormal);
+	vec3 aTangent = cross(aNormal, aBitangent);
+
+	vec3 T = normalize(vec3(model * vec4(aTangent, 0.0)));
+	vec3 B = normalize(vec3(model * vec4(aBitangent, 0.0)));
+	vec3 N = normalize(vec3(model * vec4(aNormal, 0.0)));
+
+	TBN = mat3(T, B, N);
 
 	toCameraVector = normalize(( inverse(viewMatrix) * vec4(0.0, 0.0, 0.0, 0.1) ).xyz - worldPos.xyz);
 	vPos = aPos;

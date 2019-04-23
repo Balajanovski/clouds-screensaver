@@ -12,6 +12,7 @@ uniform vec3 sunDir;
 uniform vec3 sunColor;
 
 uniform sampler2D healthyGrassTex, grassTex, patchyGrassTex, rockTex, snowTex;
+uniform sampler2D healthyGrassNormalTex, grassNormalTex, patchyGrassNormalTex, snowNormalTex;
 uniform sampler2D rockNormalMap;
 uniform sampler2D shadowMap;
 uniform float snowHeight;
@@ -34,24 +35,26 @@ struct MaterialProperties {
 // Frequency for sampling textures
 const float ROCK_TEX_FREQ = 40.0;
 const float SNOW_TEX_FREQ = 40.0;
-const float GRASS_TEX_FREQ = 40.0;
+const float GRASS_TEX_FREQ = 120.0;
 const float HEALTHY_GRASS_TEX_FREQ = 50.0;
 const float PATCHY_GRASS_TEX_FREQ = 10.0;
 
-vec4 applySnow(in vec4 heightColor, in float height, in float transition, in vec4 snowTex) {
+vec4 applySnow(in vec4 heightColor, in float height, in float transition, in vec4 snowTex, in vec3 snowNormal, in vec3 normalTex, out vec3 snowedNormalTex) {
 	vec4 snowedHeightColor = heightColor;
 
 	if (height >= snowHeight - transition) {
 		snowedHeightColor = snowTex;
+		snowedNormalTex = snowNormal;
 	} else if (height >= snowHeight- 2*transition) {
 		snowedHeightColor = mix(snowTex, heightColor, pow(1.3, -height + (snowHeight- 2*transition)));
+		snowedNormalTex = mix(snowNormal, normalTex, pow(1.3, -height + (snowHeight- 2*transition)));
 	}
 
 	return snowedHeightColor;
 }
 
-vec3 getRockNormal() {
-	vec3 normal = texture(rockNormalMap, texCoords*ROCK_TEX_FREQ).rgb;
+vec3 getNormalFromNormalMap(in vec3 normalTex) {
+	vec3 normal = normalTex;
 	normal = normalize(normal * 2.0 - 1.0);
 	normal = normalize(TBN * normal);
 
@@ -82,16 +85,26 @@ MaterialProperties getHeightMaterial() {
 	float height = vPos.y;
 
 	vec4 rock = texture(rockTex, texCoords*ROCK_TEX_FREQ);
+	vec3 rockNormal = texture(rockNormalMap, texCoords*ROCK_TEX_FREQ).xyz;
 	vec4 snow = texture(snowTex, texCoords*SNOW_TEX_FREQ);
+	vec3 snowNormal = texture(snowNormalTex, texCoords*SNOW_TEX_FREQ).xyz;
+
 	// Mix different grass textures together at differing frequencies to create more natural looking grass
-	vec4 grass = texture(grassTex, texCoords*(GRASS_TEX_FREQ)) * 0.4 +
-				 texture(healthyGrassTex, texCoords*(HEALTHY_GRASS_TEX_FREQ)) * 0.5 + 
-				 texture(patchyGrassTex, texCoords*(PATCHY_GRASS_TEX_FREQ)) * 0.1;
+	vec4 grass = texture(grassTex, texCoords*(GRASS_TEX_FREQ)) * 0.6 +
+				 texture(healthyGrassTex, texCoords*(HEALTHY_GRASS_TEX_FREQ)) * 0.2 + 
+				 texture(patchyGrassTex, texCoords*(PATCHY_GRASS_TEX_FREQ)) * 0.2;
 	grass = makeGreener(grass, 1.25);
+
+	// Mix bump maps for grass as well
+	vec3 grassNormal = (texture(grassNormalTex, texCoords*(GRASS_TEX_FREQ)).xyz * 0.6 +
+					   texture(healthyGrassNormalTex, texCoords*(HEALTHY_GRASS_TEX_FREQ)).xyz * 0.2 +
+					   texture(patchyGrassNormalTex, texCoords*(PATCHY_GRASS_TEX_FREQ)).xyz * 0.2);
+	grassNormal = mix(grassNormal, vec3(0.0, 1.0, 0.0), 0.28); // Make bump mapping less intense
 
 	vec3 upVector = vec3(0, 1, 0);
 
 	vec4 heightColor;
+	vec3 heightNormal;
 	vec3 normal = surfaceNormal;
 
 	float cosV = abs(dot(surfaceNormal, upVector)) / (length(surfaceNormal) * 1.0);
@@ -102,21 +115,23 @@ MaterialProperties getHeightMaterial() {
 		float blendingCoeff = clamp(pow((cosV - tenPercentGrass) / (grassCoverage * 0.1), 1.0), 0.0, 1.0);
 		
 		heightColor = mix(rock, grass, blendingCoeff);
+		heightNormal = mix(rockNormal, grassNormal, blendingCoeff);
 
-		vec4 snowedHeightColor = applySnow(heightColor, height, transition, snow);
+		vec4 snowedHeightColor = applySnow(heightColor, height, transition, snow, snowNormal, heightNormal, heightNormal);
 		heightColor = mix(heightColor, snowedHeightColor, blendingCoeff);
 
-		normal = mix(getRockNormal(), surfaceNormal, blendingCoeff);
+		
 	} else if (cosV > grassCoverage) {
 		heightColor = grass;
+		heightNormal = grassNormal;
 
-		heightColor = applySnow(heightColor, height, transition, snow);
+		heightColor = applySnow(heightColor, height, transition, snow, snowNormal, heightNormal, heightNormal);
     } else {
 		heightColor = rock;	
-		normal = getRockNormal();
+		heightNormal = rockNormal;
 	}
 
-
+	normal = getNormalFromNormalMap(heightNormal);
 	return MaterialProperties(heightColor, normal);	
 }
 

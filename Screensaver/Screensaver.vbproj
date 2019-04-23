@@ -208,7 +208,6 @@
     <EmbeddedResource Include="Resources\grass3.jpg" />
     <EmbeddedResource Include="Resources\rdiffuse.jpg" />
     <EmbeddedResource Include="Resources\rnormal.jpg" />
-    <EmbeddedResource Include="Resources\rock.jpg" />
     <EmbeddedResource Include="Resources\snow.jpg" />
   </ItemGroup>
   <ItemGroup>
@@ -219,6 +218,14 @@
     <EmbeddedResource Include="Resources\fir1\stamm2.jpg" />
     <EmbeddedResource Include="Resources\fir1\stamm2.png" />
     <EmbeddedResource Include="Resources\fir1\stamm21.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\grass2_NORM.png" />
+    <EmbeddedResource Include="Resources\grass3_NORM.png" />
+    <EmbeddedResource Include="Resources\snow_NORM.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\grass_NORM.jpg" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <Import Project="..\packages\AssimpNet.4.1.0\build\AssimpNet.targets" Condition="Exists('..\packages\AssimpNet.4.1.0\build\AssimpNet.targets')" />

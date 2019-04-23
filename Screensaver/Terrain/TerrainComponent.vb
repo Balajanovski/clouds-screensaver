@@ -26,11 +26,15 @@ Public Class TerrainComponent
 
     ' Textures of terrain
     Private healthyGrassTexture As Integer
+    Private healthyGrassNormalTexture As Integer
     Private grassTexture As Integer
+    Private grassNormalTexture As Integer
     Private patchyGrassTexture As Integer
+    Private patchyGrassNormalTexture As Integer
     Private rockTexture As Integer
     Private rnormalTexture As Integer
     Private snowTexture As Integer
+    Private snowNormalTexture As Integer
 
     ' Used for shadow mapping
     Private depthMapFBO As Integer
@@ -100,11 +104,15 @@ Public Class TerrainComponent
 
         ' Load terrain textures
         grassTexture = loader.LoadTexture("grass.jpg")
+        grassNormalTexture = loader.LoadTexture("grass_NORM.jpg")
         healthyGrassTexture = loader.LoadTexture("grass3.jpg")
+        healthyGrassNormalTexture = loader.LoadTexture("grass3_NORM.png")
         patchyGrassTexture = loader.LoadTexture("grass2.jpg")
+        patchyGrassNormalTexture = loader.LoadTexture("grass2_NORM.png")
         rockTexture = loader.LoadTexture("rdiffuse.jpg")
         rnormalTexture = loader.LoadTexture("rnormal.jpg")
         snowTexture = loader.LoadTexture("snow.jpg")
+        snowNormalTexture = loader.LoadTexture("snow_NORM.png")
 
         ' Generate frame buffer for shadow mapping
         depthMapFBO = GL.GenFramebuffer()
@@ -174,6 +182,10 @@ Public Class TerrainComponent
         shader.SetInt("snowTex", 4)
         shader.SetInt("rockNormalMap", 5)
         shader.SetInt("shadowMap", 6)
+        shader.SetInt("grassNormalTex", 7)
+        shader.SetInt("healthyGrassNormalTex", 8)
+        shader.SetInt("patchyGrassNormalTex", 9)
+        shader.SetInt("snowNormalTex", 10)
 
         ' Bind textures
         GL.ActiveTexture(TextureUnit.Texture0)
@@ -190,6 +202,14 @@ Public Class TerrainComponent
         GL.BindTexture(TextureTarget.Texture2D, rnormalTexture)
         GL.ActiveTexture(TextureUnit.Texture6)
         GL.BindTexture(TextureTarget.Texture2D, depthMap)
+        GL.ActiveTexture(TextureUnit.Texture7)
+        GL.BindTexture(TextureTarget.Texture2D, grassNormalTexture)
+        GL.ActiveTexture(TextureUnit.Texture8)
+        GL.BindTexture(TextureTarget.Texture2D, healthyGrassNormalTexture)
+        GL.ActiveTexture(TextureUnit.Texture9)
+        GL.BindTexture(TextureTarget.Texture2D, patchyGrassNormalTexture)
+        GL.ActiveTexture(TextureUnit.Texture10)
+        GL.BindTexture(TextureTarget.Texture2D, snowNormalTexture)
 
         ' Set terrain texturing parameters
         shader.SetFloat("snowHeight", 80.0)
