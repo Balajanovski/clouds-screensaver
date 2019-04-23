@@ -4,7 +4,6 @@ Imports OpenTK
 Public Class VolumetricComponent
     Private volumetricShader As Shader
     Private postProcessClouds As Shader
-    Private postProcessShader As Shader
 
     Private quadRenderer As ScreenQuadRenderer
     Private camera As Camera
@@ -75,11 +74,7 @@ Public Class VolumetricComponent
         volumetricShader.Use()
     End Sub
 
-    Protected Overrides Sub Finalize()
-        volumetricShader.FreeResources()
-    End Sub
-
-    Public Sub Render(time As Single, terrainOcclusionTex As Integer, colorPreset As Preset)
+    Public Sub Render(time As Single, terrainOcclusionTex As Integer, backgroundTex As Integer, colorPreset As Preset)
         volumetricShader.Use()
 
         ' Set uniforms
@@ -111,6 +106,7 @@ Public Class VolumetricComponent
         volumetricShader.SetInt("lastFrame", 5)
         volumetricShader.SetInt("lastFrameAlphaness", 6)
         volumetricShader.SetInt("terrainOcclusion", 7)
+        volumetricShader.SetInt("background", 8)
 
         ' Activate texture units
         GL.ActiveTexture(TextureUnit.Texture1)
@@ -127,6 +123,8 @@ Public Class VolumetricComponent
         GL.BindTexture(TextureTarget.Texture2D, temporalProjection.lastFrameAlphaness)
         GL.ActiveTexture(TextureUnit.Texture7)
         GL.BindTexture(TextureTarget.Texture2D, terrainOcclusionTex)
+        GL.ActiveTexture(TextureUnit.Texture8)
+        GL.BindTexture(TextureTarget.Texture2D, backgroundTex)
 
         ' Cache view projection matrix for temporal reprojection
         oldViewProjection = Matrix4.Mult(camera.ProjectionMatrix, camera.ViewMatrix)
@@ -148,6 +146,11 @@ Public Class VolumetricComponent
         GL.ActiveTexture(TextureUnit.Texture0)
         GL.BindTexture(TextureTarget.Texture2D, temporalProjection.currentFrame)
         quadRenderer.Render()
+    End Sub
+
+    Protected Overrides Sub Finalize()
+        postProcessClouds.FreeResources()
+        volumetricShader.FreeResources()
     End Sub
 
     ' Allow retrieval of cloud occlusion for God rays

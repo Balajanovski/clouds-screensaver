@@ -21,8 +21,8 @@ Public Class GodRaysComponent
                    ByRef sunmanager As SunManager,
                    ByRef cam As Camera,
                    ByRef screenQuadRenderer As ScreenQuadRenderer)
-        godRaysWidth = DisplayDevice.Default.Width
-        godRaysHeight = DisplayDevice.Default.Height
+        godRaysWidth = DisplayDevice.Default.Width * 0.5
+        godRaysHeight = DisplayDevice.Default.Height * 0.5
         quadRenderer = screenQuadRenderer
         sun = sunmanager
         camera = cam
@@ -47,6 +47,10 @@ Public Class GodRaysComponent
         GL.Clear(ClearBufferMask.ColorBufferBit)
         quadRenderer.Render()
         godRaysFrameBufferComponet.UnBind()
+    End Sub
+
+    Protected Overrides Sub Finalize()
+        godRaysShader.FreeResources()
     End Sub
 
     Public ReadOnly Property CurrentFrame As Integer

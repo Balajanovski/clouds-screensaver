@@ -112,6 +112,7 @@
     <Compile Include="GodRays\GodRaysComponent.vb" />
     <Compile Include="GodRays\GodRaysFrameBufferComponent.vb" />
     <Compile Include="HDRComponent.vb" />
+    <Compile Include="Scattering\ScatteringFrameBufferComponent.vb" />
     <Compile Include="Terrain\Terrain.vb" />
     <Compile Include="Terrain\TerrainFrameBufferComponent.vb" />
     <Compile Include="Terrain\TerrainObjectComponent.vb" />
@@ -125,7 +126,7 @@
     <Compile Include="Util\NoiseGenerator3D.vb" />
     <Compile Include="Util\NoiseGeneratorBase.vb" />
     <Compile Include="Util\RandomFloatGenerator.vb" />
-    <Compile Include="ScatteringComponent.vb" />
+    <Compile Include="Scattering\ScatteringComponent.vb" />
     <Compile Include="ScreenQuadRenderer.vb" />
     <Compile Include="Screensaver.vb" />
     <Compile Include="Program.vb" />

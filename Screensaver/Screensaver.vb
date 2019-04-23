@@ -135,15 +135,16 @@ Public Class Screensaver
             terrainComponent.RenderShadowMap(colorConfiguration)
         End If
 
+        scatteringComponent.Render(time, colorConfiguration)
         terrainComponent.Render(colorConfiguration)
-        volumetricComponent.Render(time, terrainComponent.OcclusionTexture, colorConfiguration)
+        volumetricComponent.Render(time, terrainComponent.OcclusionTexture,
+                                   scatteringComponent.CurrentFrame, colorConfiguration)
         godRaysComponent.Render(volumetricComponent.OcclusionTexture)
 
         hdrComponent.Bind()
         GL.Clear(ClearBufferMask.ColorBufferBit Or ClearBufferMask.DepthBufferBit)
         GL.Enable(EnableCap.Blend)
         GL.Disable(EnableCap.DepthTest)
-        scatteringComponent.Render(time, colorConfiguration)
         volumetricComponent.Blit()
         terrainComponent.Blit()
         GL.Disable(EnableCap.Blend)

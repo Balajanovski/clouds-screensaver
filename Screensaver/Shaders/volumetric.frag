@@ -2,6 +2,8 @@
 
 #define fragCoord (gl_FragCoord.xy)
 
+in vec2 TexCoords;
+
 layout (location = 0) out vec4 out_color;
 layout (location = 1) out vec4 cloudColor;
 layout (location = 2) out vec4 alphaness;
@@ -34,6 +36,9 @@ uniform sampler2D lastFrameAlphaness;
 
 // Terrain occlusion, for excluding texels from calculations as an optimization
 uniform sampler2D terrainOcclusion;
+
+// Background texture for blending with clouds
+uniform sampler2D background;
 
 // Frame iteration counter for temporal reprojection mod 16
 uniform int frameIter;
@@ -283,7 +288,7 @@ const float bayerFilter[16u] = float[]
 );
 
 // Volumetric raymarching algorithm
-vec4 volumetricRaymarch(in vec3 startRay, in vec3 endRay, in vec3 rayDir, in float stepSize, in vec2 t, in vec2 dt, in vec2 wt) {
+vec4 volumetricRaymarch(in vec3 startRay, in vec3 endRay, in vec3 rayDir, in float stepSize, in vec2 t, in vec2 dt, in vec2 wt, in vec3 bg) {
 	vec4 accumulation = vec4(0.0);
 
 	int a = int(fragCoord.x) % 4;
@@ -320,7 +325,7 @@ vec4 volumetricRaymarch(in vec3 startRay, in vec3 endRay, in vec3 rayDir, in flo
 			vec3 ambientLight = ambientLight(heightFrac);
 			float powderTerm = powder(cloudDensity);
 
-			vec3 source = 0.6 * (mix(ambientLight * 1.8, scattering * SUN_COLOR, powderTerm * lightDensity)) * cloudDensity;
+			vec3 source = 0.6 * (mix(mix(ambientLight * 1.8, bg, 0.4), scattering * SUN_COLOR, powderTerm * lightDensity)) * cloudDensity;
 			float deltaTrans = exp(cloudDensity * sigmaDS);
 			vec3 sourceIntegral = (source - source * deltaTrans) * (1.0 / cloudDensity);
 
@@ -422,11 +427,15 @@ float threshold(float v, float t) {
 }
 
 void main() {
+	// Fetch background color
+	vec4 bg = texture(background, TexCoords);
+	vec4 color = bg;
+
 	// Check if texel is occluded by terrain -- early exit if true
-	if (texture(terrainOcclusion, computeScreenPos(computeClipSpaceCoord().xy)).r > 0.0) {
-		out_color = vec4(0.0, 0.0, 0.0, 0.0);
+	if (texture(terrainOcclusion, TexCoords).r > 0.0) {
+		out_color = color;
 		cloudColor = vec4(0.0, 0.0, 0.0, 0.0);
-		alphaness = vec4(vec3(texture(terrainOcclusion, computeScreenPos(computeClipSpaceCoord().xy)).r), 1.0);
+		alphaness = vec4(vec3(texture(terrainOcclusion, TexCoords).r), 1.0);
 		return;
 	}
 
@@ -451,9 +460,9 @@ void main() {
 	endPos = worldDir * raySphereIntersection(cameraPos, worldDir, SPHERE_OUTER_RADIUS);
 
 	// Compute fog amount -- early exit if fog is too large
-	float fogAmount = computeFogAmount(cameraPos + startPos, 0.00002);
-	if (fogAmount > 0.990) {
-		out_color = vec4(0.0, 0.0, 0.0, 0.0);
+	float fogAmount = computeFogAmount(cameraPos + startPos, 0.00002) * 2;
+	if (fogAmount > 0.965) {
+		out_color = bg;
 		cloudColor = vec4(0.0, 0.0, 0.0, 0.0);
 		alphaness = vec4(0.0, 0.0, 0.0, 1.0);
 		return;
@@ -468,13 +477,12 @@ void main() {
 	}
 
 	// If the pixel must be recalculated
-	vec4 color = vec4(0.0);
 	if ((oldFrameAlpha >= 0.0 || frameIter == 0) && (writePixel() || isOut)) {
 		// Raymarch
 		float stepSize = length(endPos - startPos) / MAX_STEPS;
 		vec2 t, dt, wt;
 		planeAlignment(startPos, worldDir, stepSize, t, dt, wt);
-		color = volumetricRaymarch(startPos, endPos, worldDir, stepSize, t, dt, wt);
+		color = volumetricRaymarch(startPos, endPos, worldDir, stepSize, t, dt, wt, bg.rgb);
 		cloudColor = color; // Output untampered with cloud color to texture
 							// for temporal reprojection
 	} else {
@@ -486,6 +494,11 @@ void main() {
 
 	color.rgb = color.rgb*1.8 - 0.1; // Constrast-illumination tuning
 
+	// Add atmospheric fog to far away clouds
+	vec3 ambientColor = bg.rgb;
+	color.rgb = mix(color.rgb, bg.rgb*color.a, clamp(fogAmount, 0.0, 1.0));
+
+	// Create occlusion texture for god rays
 	float cloudAlphaness = threshold(color.a, 0.2);
 	alphaness = vec4(cloudAlphaness, 0.0, 0.0, 1.0); // Output cloud alphaness to texture
 	alphaness += texture(terrainOcclusion, computeScreenPos(computeClipSpaceCoord().xy)).r; // Add terrain occlusion to alphaness texture
@@ -496,5 +509,9 @@ void main() {
 	vec3 s = 0.8 * vec3(1.0,0.4,0.2) * pow(sun, 256.0);
 	color.rgb += s * color.a;
 
-	out_color = color; // Output fragment color to screen
+	// Blend clouds and background
+	bg.rgb = bg.rgb * (1.0 - color.a) + color.rgb;
+	bg.a = 1.0;
+
+	out_color = bg; // Output fragment color to screen
 }
