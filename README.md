@@ -13,6 +13,6 @@ The screensaver implements:
 
 ## Screenshots
 
-![Screenshot 1](https://raw.githubusercontent.com/Balajanovski/clouds-screensaver/screenshots/Capture1.jpg)<br>
-![Screenshot 2](https://raw.githubusercontent.com/Balajanovski/clouds-screensaver/screenshots/Capture2.jpg)<br>
-![Screenshot 3](https://raw.githubusercontent.com/Balajanovski/clouds-screensaver/screenshots/Capture3.jpg)<br>
+![Screenshot 1](https://raw.githubusercontent.com/Balajanovski/clouds-screensaver/master/screenshots/Capture1.jpg?token=AFAHBY6HLKHHFAGCNDMNQ224Y7UA4)<br>
+![Screenshot 2](https://raw.githubusercontent.com/Balajanovski/clouds-screensaver/master/screenshots/Capture2.jpg?token=AFAHBY7XPFBIWKBLPU2I2VC4Y7UES)<br>
+![Screenshot 3](https://raw.githubusercontent.com/Balajanovski/clouds-screensaver/master/screenshots/Capture3.jpg?token=AFAHBYY6CLHXI4N7VJ7LISS4Y7UFU)<br>
