@@ -48,6 +48,8 @@ Public Class TerrainComponent
     Dim terrainResolutionWidth As Integer
     Dim terrainResolutionHeight As Integer
 
+    Private fogFalloff As Single
+
     Private Const SHADOW_WIDTH As Integer = 4096
     Private Const SHADOW_HEIGHT As Integer = 4096
 
@@ -74,6 +76,7 @@ Public Class TerrainComponent
         terrainFrameBufferComponent = New TerrainFrameBufferComponent(terrainResolutionWidth, terrainResolutionHeight)
         quadRenderer = screenQuadRenderer
         textureBlitterShader = New Shader("ScreenQuadRenderer.vert", "BlitTextureToScreen.frag")
+        fogFalloff = 1.5
 
         shader = New Shader(shaderVertSrc, shaderFragSrc)
         shadowShader = New Shader(shadowShaderVertexSrc, shadowShaderFragSrc)
@@ -127,7 +130,7 @@ Public Class TerrainComponent
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0)
     End Sub
 
-    Public Sub RenderShadowMap()
+    Public Sub RenderShadowMap(colorPreset As Preset)
         GL.Viewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT)
         GL.Enable(EnableCap.DepthTest)
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, depthMapFBO)
@@ -139,7 +142,7 @@ Public Class TerrainComponent
         shadowShader.Use()
 
         Dim shadowShaderUniformBinding =
-            Sub(shadowShader As Shader)
+            Sub(shadowShader As Shader, preset As Preset)
                 lightProjection = Matrix4.CreateOrthographic(240.0, 240.0, 0.2, 2500.0)
 
                 Dim lookAtPos = camera.Position + New Vector3(50, 0, 80)
@@ -151,14 +154,14 @@ Public Class TerrainComponent
             End Sub
 
         ' Draw randomly placed objects
-        objectComponent.DrawObjects(shadowShader, shadowShaderUniformBinding)
+        objectComponent.DrawObjects(shadowShader, colorPreset, shadowShaderUniformBinding)
 
         GL.Disable(EnableCap.CullFace)
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0)
         GL.Viewport(0, 0, terrainResolutionWidth, terrainResolutionHeight)
     End Sub
 
-    Public Sub Render()
+    Public Sub Render(colorPreset As Preset)
         configureShaderAndMatrices()
 
         prepareTerrain(terrain)
@@ -193,8 +196,16 @@ Public Class TerrainComponent
         shader.SetFloat("grassCoverage", 0.77)
 
         ' Set sun and lighting related paramters
-        shader.SetVec3("sunColor", sun.color)
+        shader.SetVec3("sunColor", colorPreset.lightColor)
         shader.SetVec3("sunDir", sun.lightDir)
+
+        ' Set fog parameters
+        shader.SetFloat("fogFalloff", fogFalloff * 0.000001)
+        shader.SetVec3("fogColor", colorPreset.fogColor)
+        shader.SetFloat("dispFactor", 20.0)
+
+        ' Set camera parameter
+        shader.SetVec3("cameraPos", camera.Position)
 
         ' Draw terrain
         terrainFrameBufferComponent.Bind()
@@ -204,7 +215,7 @@ Public Class TerrainComponent
         unbindTexturedModel()
 
         ' Draw randomly placed objects
-        objectComponent.DrawObjects()
+        objectComponent.DrawObjects(colorPreset)
         terrainFrameBufferComponent.UnBind()
         GL.Disable(EnableCap.DepthTest)
     End Sub

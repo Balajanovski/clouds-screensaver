@@ -6,8 +6,10 @@ layout (location = 0) out vec4 out_color;
 layout (location = 1) out vec4 cloudColor;
 layout (location = 2) out vec4 alphaness;
 
-uniform vec3 sunColor;
+uniform vec3 lightColor;
 uniform vec3 sunDir;
+
+#define SUN_COLOR (lightColor*vec3(1.1, 1.1, 0.95))
 
 uniform float EARTH_RADIUS;
 
@@ -53,13 +55,15 @@ const float SPHERE_OUTER_RADIUS = (SPHERE_INNER_RADIUS + 17000.0);
 const float SPHERE_DELTA = float(SPHERE_OUTER_RADIUS - SPHERE_INNER_RADIUS);
 const vec3 sphereCenter = vec3(0.0, -EARTH_RADIUS, 0.0);
 const vec3 windDirection = vec3(1, 0, 1);
-const float CLOUD_SPEED = 100.0;
+const float CLOUD_SPEED = 450.0;
 const float CLOUD_TOP_OFFSET = 750.0;
 const float CLOUD_SCALE = 40.0;
-const float coverageMultiplier = 0.6;
-const vec3 CLOUDS_AMBIENT_COLOR_TOP = (vec3(169.0, 149.0, 149.0)*(1.5/255.0));
-const vec3 CLOUDS_AMBIENT_COLOR_BOTTOM = (vec3(65.0, 70.0, 80.0)*(1.5/255.0));
-const float WEATHER_SCALE = 0.0000008;
+const float coverageMultiplier = 0.25;
+uniform vec3 CLOUDS_AMBIENT_COLOR_TOP = (vec3(169.0, 149.0, 149.0)*(1.5/255.0));
+uniform vec3 CLOUDS_AMBIENT_COLOR_BOTTOM = (vec3(65.0, 70.0, 80.0)*(1.5/255.0));
+const float WEATHER_SCALE = 1.2;
+const float DENSITY_FACTOR = 0.02;
+const float CURLINESS = 0.1;
 
 vec3 noiseKernel[6] = vec3[] (
 	vec3( 0.38051305,  0.92453449, -0.02111345),
@@ -81,14 +85,14 @@ float remap(in float originalValue, in float originalMin, in float originalMax, 
 
 // Perlin-Worley noise for cloud shape and volume
 // Idea sourced from GPU Pro 7
-vec4 sampleCloudTex(in vec3 pos) {
-	return texture(cloudNoise, pos) * 0.8;
+vec4 sampleCloudTex(in vec3 pos, in float lod) {
+	return textureLod(cloudNoise, pos, lod) * 0.8;
 }
 
 // Worley noise to add detail to the clouds
 // Idea sourced from GPU Pro 7
-vec4 worley(in vec3 pos) {
-	return texture(worleyNoise, pos) * 0.1;
+vec4 worley(in vec3 pos, in float lod) {
+	return textureLod(worleyNoise, pos, lod);
 }
 
 // Curl noise for whisps in clouds
@@ -100,7 +104,7 @@ vec4 curl(in vec2 pos) {
 // Sample from weather texture
 // Idea of a weather texture sourced from GPU Pro 7 
 vec4 weather(in vec2 pos) {
-	return texture(weatherTexture, pos);
+	return texture(weatherTexture, pos * WEATHER_SCALE);
 }
 
 // Mix density gradients of different cloud types
@@ -148,7 +152,7 @@ vec2 getUVProjection(vec3 p){
 
 // Cloud density algorithm follows GPU Pro 7 Article's Idea
 // Help with implementation sourced from: https://www.gamedev.net/forums/topic/680832-horizonzero-dawn-cloud-system/?page=6
-float sampleCloudDensity(in vec3 pos, in float heightFrac, in bool highQuality) {
+float sampleCloudDensity(in vec3 pos, in float heightFrac, in bool highQuality, float lod) {
 	vec3 animation = heightFrac * windDirection * CLOUD_TOP_OFFSET + windDirection * time * CLOUD_SPEED;
 	vec2 uv = getUVProjection(pos);
 	vec2 movingUV = getUVProjection(pos + animation);
@@ -158,7 +162,7 @@ float sampleCloudDensity(in vec3 pos, in float heightFrac, in bool highQuality) 
 	}
 	
 	// Fluffy cloud shapes achieved with Perlin-Worley Noise
-	vec4 lowFreqNoise = sampleCloudTex(vec3(uv*CLOUD_SCALE, heightFrac));
+	vec4 lowFreqNoise = sampleCloudTex(vec3(uv*CLOUD_SCALE, heightFrac), lod);
 	float lowFreqFBM = dot(lowFreqNoise.gba, vec3(0.625, 0.25, 0.125));
 
 	float baseCloud = remap(
@@ -166,12 +170,12 @@ float sampleCloudDensity(in vec3 pos, in float heightFrac, in bool highQuality) 
 		-(1.0 - lowFreqFBM), 1.0,
 		0.0, 1.0);
 
-	vec3 weatherData = weather(movingUV).rgb * coverageMultiplier;
+	vec3 weatherData = weather(movingUV).rgb;
+	float cloudCoverage = getCoverage(weatherData) * coverageMultiplier;
 
-	float density = getDensityForCloudType(heightFrac, 0.5);
+	float density = getDensityForCloudType(heightFrac, 1.0);
 	baseCloud *= (density / heightFrac);
 
-	float cloudCoverage = getCoverage(weatherData);
 	float baseCloudWithCoverage = remap(
 		baseCloud,
 		cloudCoverage, 1.0,
@@ -180,11 +184,11 @@ float sampleCloudDensity(in vec3 pos, in float heightFrac, in bool highQuality) 
 
 	if (highQuality) {
 		// Add curl noise (whisps in the clouds)
-		vec2 whisp = curl(vec2(movingUV*CLOUD_SCALE)*0.1).xy;
+		vec2 whisp = curl(vec2(movingUV*CLOUD_SCALE)*CURLINESS).xy;
 		pos.xy += whisp * 400.0 * (1.0 - heightFrac);
 
 		// Erode the clouds to add detail using worley noise
-		vec3 highFreqErosionNoise = worley(vec3(movingUV*CLOUD_SCALE, heightFrac)).rgb;
+		vec3 highFreqErosionNoise = worley(vec3(movingUV*CLOUD_SCALE, heightFrac) * CURLINESS, lod).rgb;
 		float highFreqErosionFBM = dot(highFreqErosionNoise.rgb, vec3(0.625, 0.25, 0.125));
 
 		float highFreqNoiseModifier = mix(highFreqErosionFBM, 1.0 - highFreqErosionFBM, clamp(heightFrac * 10.0, 0.0, 1.0));
@@ -209,12 +213,12 @@ float beerLambert(float sampleDensity, float precipitation) {
 }
 
 float powder(float d){
-	return (1. - exp(-2.*d));
+	return (1.0 - exp(-2.0*d));
 }
 
 float henyeyGreenstein(float lightDotEye, float g) {
 	float g2 = g * g;
-	return ((1.0 - g2) / pow((1.0 + g2 - 2.0 * g * lightDotEye), 1.5)) * 0.25;
+	return ((1.0 - g2) / pow((1.0 + g2 - 2.0 * g * lightDotEye), 1.5));
 }
 
 // Determine amount of light which reaches a point in the cloud by raymarching through a cone
@@ -240,7 +244,7 @@ float sampleCloudDensityAlongCone(in vec3 startPos, in float stepSize, in float 
 		float heightFraction = getHeightFraction(pos);
 		if(heightFraction >= 0)
 		{
-			float cloudDensity = sampleCloudDensity(pos, heightFraction, density > 0.3);
+			float cloudDensity = sampleCloudDensity(pos, heightFraction, density > 0.3, i / 16);
 			if(cloudDensity > 0.0)
 			{
 				float Ti = exp(cloudDensity*sigmaDS);
@@ -257,15 +261,16 @@ float sampleCloudDensityAlongCone(in vec3 startPos, in float stepSize, in float 
 
 vec3 ambientLight(float heightFrac) {
 	return mix(
-		CLOUDS_AMBIENT_COLOR_BOTTOM * sunColor,
-		CLOUDS_AMBIENT_COLOR_TOP * sunColor,
+		CLOUDS_AMBIENT_COLOR_BOTTOM * SUN_COLOR,
+		CLOUDS_AMBIENT_COLOR_TOP * SUN_COLOR,
 		heightFrac);
 }
 
 float lightScattering(in float lightDotEye) {
-	return mix(henyeyGreenstein(lightDotEye, -0.2),
-			   henyeyGreenstein(lightDotEye, 0.2),
-			   clamp(lightDotEye*0.5 + 0.5, 0.0, 1.0));
+	float scattering = mix(henyeyGreenstein(lightDotEye, -0.08),
+						   henyeyGreenstein(lightDotEye, 0.08),
+						   clamp(lightDotEye*0.5 + 0.5, 0.0, 1.0));
+	return max(scattering, 1.0);
 }
 
 #define BAYER_FACTOR 1.0/16.0
@@ -286,8 +291,7 @@ vec4 volumetricRaymarch(in vec3 startRay, in vec3 endRay, in vec3 rayDir, in flo
 	startRay += rayDir * bayerFilter[a * 4 + b];
 
 	float lightDotEye = dot(normalize(sunDir), normalize(rayDir));
-	const float absorption = 0.01;
-	float sigmaDS = -stepSize * absorption;
+	float sigmaDS = -stepSize * DENSITY_FACTOR;
 	float density;
 	float transmittance = 1.0;
 
@@ -302,7 +306,7 @@ vec4 volumetricRaymarch(in vec3 startRay, in vec3 endRay, in vec3 rayDir, in flo
 
 		// Get height fraction and cloud density
 		float heightFrac = getHeightFraction(pos);
-		float cloudDensity = sampleCloudDensity(pos, heightFrac, true);
+		float cloudDensity = sampleCloudDensity(pos, heightFrac, true, i / 16);
 
 		// If the density is above 0 calculate lighting
 		if (cloudDensity > 0.0 + EPSILON) {
@@ -314,18 +318,18 @@ vec4 volumetricRaymarch(in vec3 startRay, in vec3 endRay, in vec3 rayDir, in flo
 				cloudDensity);
 
 			vec3 ambientLight = ambientLight(heightFrac);
-			float powderTerm = (1.0*0.25 + 0.75*powder(cloudDensity));
+			float powderTerm = powder(cloudDensity);
 
-			vec3 source = 0.6 * (mix(ambientLight * 1.8, scattering * sunColor, powderTerm * lightDensity)) * cloudDensity;
+			vec3 source = 0.6 * (mix(ambientLight * 1.8, scattering * SUN_COLOR, powderTerm * lightDensity)) * cloudDensity;
 			float deltaTrans = exp(cloudDensity * sigmaDS);
 			vec3 sourceIntegral = (source - source * deltaTrans) * (1.0 / cloudDensity);
 
 			accumulation.rgb += transmittance * sourceIntegral;
 			transmittance *= deltaTrans;
-	
-			if(transmittance <= CLOUDS_MIN_TRANSMITTANCE) {
+		}
+
+		if(transmittance <= CLOUDS_MIN_TRANSMITTANCE) {
 				break;
-			}
 		}
 	}
 
@@ -401,18 +405,16 @@ vec2 computeScreenPos(vec2 ndc){
 	return (ndc*0.5 + 0.5);
 }
 
-const int bayerMatrix16[16] = int[]
+const int bayerMatrix4[4] = int[]
 (
-	0, 8, 2, 10,
-	12, 4, 14, 6,
-	3, 11, 1, 9,
-	15, 7, 13, 5
+	0, 2,
+	3, 1
 );
 
 bool writePixel() {
-	int index = bayerMatrix16[frameIter];
+	int index = bayerMatrix4[frameIter];
 	ivec2 icoord = ivec2(fragCoord.xy);
-    return ((icoord.x + 4*icoord.y) % 16 == index);
+    return ((icoord.x + 2*icoord.y) % 4 == index);
 }
 
 float threshold(float v, float t) {
@@ -462,7 +464,7 @@ void main() {
 	vec4 oldFrameTexel = texture(lastFrame, prevFrameScreenPos);
 
 	if (!isOut) {
-		oldFrameAlpha = texture(lastFrameAlphaness, prevFrameScreenPos).r;
+		oldFrameAlpha = texture(lastFrameAlphaness, computeScreenPos(computeClipSpaceCoord().xy)).r;
 	}
 
 	// If the pixel must be recalculated

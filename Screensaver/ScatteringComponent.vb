@@ -17,14 +17,16 @@ Public Class ScatteringComponent
         sun = sunManager
     End Sub
 
-    Public Sub Render(time As Single)
+    Public Sub Render(time As Single, colorPreset As Preset)
         scatteringShader.Use()
         scatteringShader.SetFloat("time", time)
         scatteringShader.SetVec2("resolution", DisplayDevice.Default.Width, DisplayDevice.Default.Height)
         scatteringShader.SetMat4("inverseView", False, Matrix4.Invert(camera.ViewMatrix))
         scatteringShader.SetMat4("inverseProjection", False, Matrix4.Invert(camera.ProjectionMatrix))
-        scatteringShader.SetVec3("sunColor", sun.color)
+        scatteringShader.SetVec3("sunColor", colorPreset.lightColor)
         scatteringShader.SetVec3("sunPos", sun.position)
+        scatteringShader.SetVec3("skyColorTop", colorPreset.skyColorTop)
+        scatteringShader.SetVec3("skyColorBottom", colorPreset.skyColorBottom)
         scatteringShader.SetFloat("EARTH_RADIUS", earth.radius)
         quadRenderer.Render()
     End Sub

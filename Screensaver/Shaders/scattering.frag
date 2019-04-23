@@ -21,6 +21,9 @@ uniform vec3 sunColor;
 uniform vec3 sunPos;
 uniform float EARTH_RADIUS;
 
+uniform vec3 skyColorTop;
+uniform vec3 skyColorBottom;
+
 vec2 rsi(vec3 r0, vec3 rd, float sr) {
     // ray-sphere intersection that assumes
     // the sphere is centered at the origin.
@@ -151,5 +154,7 @@ void main() {
         0.758                           // Mie preferred scattering direction
     );
 
-	out_color = vec4(color, 1.0);
+	vec3 skyColor = mix(skyColorBottom, skyColorTop, vPos.y);
+
+	out_color = vec4(color * skyColor, 1.0);
 }

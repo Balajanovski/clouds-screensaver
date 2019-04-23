@@ -55,11 +55,11 @@ Public Class Screensaver
         MyBase.OnLoad(e)
 
         GL.Enable(EnableCap.DepthTest)
-        GL.ClearColor(0.0, 0.0, 0.0, 1.0)
+        GL.ClearColor(0.0, 0.0, 0.0, 0.0)
         GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha)
 
-        earth = New EarthManager(700000.0)
-        sun = New SunManager(ORANGE, Vector3d.Normalize(New Vector3(1.0, 1.0, 0.0)))
+        earth = New EarthManager(600000.0)
+        sun = New SunManager(Vector3d.Normalize(New Vector3(1.0, 1.0, 0.0)))
 
         screenQuadRenderer = New ScreenQuadRenderer(loader)
         camera = New Camera(New Vector3(0.0, earth.radius, 0.0),
@@ -68,7 +68,7 @@ Public Class Screensaver
         scatteringComponent = New ScatteringComponent("ScreenQuadRenderer.vert", "scattering.frag", screenQuadRenderer, camera, earth, sun)
         volumetricComponent = New VolumetricComponent("ScreenQuadRenderer.vert", "volumetric.frag", screenQuadRenderer, camera, earth, sun)
         terrainComponent = New TerrainComponent("Terrain.vert", "Terrain.frag", "DepthShader.vert", "DepthShader.frag", 2000, 2000, 100.0, 1.5, camera, earth, sun, screenQuadRenderer, loader)
-        hdrComponent = New HDRComponent("ScreenQuadRenderer.vert", "hdr.frag", -0.8, screenQuadRenderer)
+        hdrComponent = New HDRComponent("ScreenQuadRenderer.vert", "hdr.frag", 3.0, screenQuadRenderer)
         godRaysComponent = New GodRaysComponent("ScreenQuadRenderer.vert", "GodRays.frag", sun, camera, screenQuadRenderer)
     End Sub
 
@@ -113,13 +113,8 @@ Public Class Screensaver
         End If
     End Function
 
-    ' RGB Colors
-    Private ReadOnly WHITE As New Vector3(1.0, 1.0, 1.0)
-    Private ReadOnly ORANGE As New Vector3(1.0, 0.647, 0.0)
-    Private ReadOnly GRAYISH_BLACK As New Vector3(0.08, 0.05, 0.08)
-
-    Private Shared Function Lerp(v1 As Vector3, v2 As Vector3, t As Single) As Vector3
-        Return v1 + t * (v2 - v1)
+    Private Shared Function Sigmoid(v As Single)
+        Return 1 / (1.0 + Math.Exp(8.0 - v * 40.0))
     End Function
 
     Protected Overrides Sub OnRenderFrame(e As FrameEventArgs)
@@ -127,30 +122,28 @@ Public Class Screensaver
 
         time += e.Time
 
-        Dim slowedTime As Single = time / 64
+        Dim slowedTime As Single = time / 58
         Dim sunYPos As Single = Math.Abs(Math.Sin(2 * slowedTime))
         sun.position = New Vector3(Math.Sin(slowedTime Mod (Math.PI / 2)), sunYPos, Math.Cos(slowedTime Mod (Math.PI / 2)))
 
-        If (sunYPos <= 0.5) Then
-            sun.color = Lerp(GRAYISH_BLACK, ORANGE, sunYPos * 2.0)
-        Else
-            sun.color = Lerp(ORANGE, WHITE, (sunYPos - 0.5) * 2.0)
-        End If
+        Dim colorConfiguration As Preset = Presets.MixPresets(Sigmoid(-sun.lightDir.Y),
+                                                              Presets.DefaultPreset,
+                                                              Presets.SunsetPreset)
 
         ' Shadows not rendered if sun is too low in sky
         If sun.position.Y > 0.08 Then
-            terrainComponent.RenderShadowMap()
+            terrainComponent.RenderShadowMap(colorConfiguration)
         End If
 
-        terrainComponent.Render()
-        volumetricComponent.Render(time, terrainComponent.OcclusionTexture)
+        terrainComponent.Render(colorConfiguration)
+        volumetricComponent.Render(time, terrainComponent.OcclusionTexture, colorConfiguration)
         godRaysComponent.Render(volumetricComponent.OcclusionTexture)
 
         hdrComponent.Bind()
         GL.Clear(ClearBufferMask.ColorBufferBit Or ClearBufferMask.DepthBufferBit)
         GL.Enable(EnableCap.Blend)
         GL.Disable(EnableCap.DepthTest)
-        scatteringComponent.Render(time)
+        scatteringComponent.Render(time, colorConfiguration)
         volumetricComponent.Blit()
         terrainComponent.Blit()
         GL.Disable(EnableCap.Blend)

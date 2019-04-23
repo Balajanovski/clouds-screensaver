@@ -115,6 +115,7 @@
     <Compile Include="Terrain\Terrain.vb" />
     <Compile Include="Terrain\TerrainFrameBufferComponent.vb" />
     <Compile Include="Terrain\TerrainObjectComponent.vb" />
+    <Compile Include="Util\ColorPreset.vb" />
     <Compile Include="Util\FrameBufferComponentBase.vb" />
     <Compile Include="Util\Loader.vb" />
     <Compile Include="Util\Mesh.vb" />

@@ -16,6 +16,12 @@ uniform sampler2D rockNormalMap;
 uniform sampler2D shadowMap;
 uniform float snowHeight;
 uniform float grassCoverage;
+uniform float dispFactor;
+
+uniform vec3 fogColor;
+uniform float fogFalloff;
+
+uniform vec3 cameraPos;
 
 layout (location = 0) out vec4 out_color;
 layout (location = 1) out vec4 occlusionTex;
@@ -52,6 +58,24 @@ vec3 getRockNormal() {
 	return normal;
 }
 
+const float c = 18.0;
+float applyFog(in float dist,       // camera to point distance
+               in vec3  cameraPos,  // camera position
+               in vec3  rayDir ) {  // camera to point vector
+    float fogAmount = c * exp(-cameraPos.y*fogFalloff) * (1.0-exp( -dist*rayDir.y*fogFalloff ))/rayDir.y;
+    return clamp(fogAmount,0.0,1.0);
+}
+
+vec4 makeGreener(vec4 color, float greeningFactor) {
+	float recipricol = 1.0 / greeningFactor;
+	color.r *= recipricol;
+	color.b *= recipricol;
+
+	color.g *= greeningFactor;
+
+	return color;
+}
+
 MaterialProperties getHeightMaterial() {
 	float transition = 20.0;
 
@@ -61,8 +85,9 @@ MaterialProperties getHeightMaterial() {
 	vec4 snow = texture(snowTex, texCoords*SNOW_TEX_FREQ);
 	// Mix different grass textures together at differing frequencies to create more natural looking grass
 	vec4 grass = texture(grassTex, texCoords*(GRASS_TEX_FREQ)) * 0.4 +
-				 texture(healthyGrassTex, texCoords*(HEALTHY_GRASS_TEX_FREQ)) * 0.3 + 
-				 texture(patchyGrassTex, texCoords*(PATCHY_GRASS_TEX_FREQ)) * 0.3;
+				 texture(healthyGrassTex, texCoords*(HEALTHY_GRASS_TEX_FREQ)) * 0.5 + 
+				 texture(patchyGrassTex, texCoords*(PATCHY_GRASS_TEX_FREQ)) * 0.1;
+	grass = makeGreener(grass, 1.25);
 
 	vec3 upVector = vec3(0, 1, 0);
 
@@ -112,7 +137,7 @@ vec3 specular(vec3 normal){
 	float specularFactor = 0.01f;
 	vec3 reflectDir = reflect(sunDir, normal);  
 	float spec = pow(max(dot(toCameraVector, reflectDir), 0.0), 32.0);
-	vec3 specular = spec * sunColor*specularFactor; 
+	vec3 specular = spec * vec3(1.0)*specularFactor; 
 	return specular;
 }
 
@@ -155,10 +180,10 @@ void main() {
 	// Transform to [0,1] range
 	projCoords = projCoords * 0.5 + 0.5;
 	
-	//out_color = vec4(vec3(projCoords.z), 1.0);
-	//out_color = vec4(vec3(projCoords.z, texture(shadowMap, projCoords.xy).r, 0.0), 1.0);
-	//out_color = vec4(vec3(texture(shadowMap, projCoords.xy).r), 1.0);
-	//out_color = vec4(vec3(shadow), 1.0);
+	// Fill terrain occlusion texture
 	occlusionTex = vec4(1.0);
-	out_color = heightMaterial.color*vec4((amb + ((diff + spec) * shadow)) * vec3(1.0), 1.0);
+
+	float fogFactor = applyFog(distance(cameraPos, vPos), cameraPos, normalize(vPos - cameraPos));
+	vec4 preFogColor = heightMaterial.color*vec4((amb + ((diff + spec) * shadow)) * vec3(1.0), 1.0);
+	out_color = mix(preFogColor, vec4(fogColor, 1.0), 1.0-fogFactor);
 }

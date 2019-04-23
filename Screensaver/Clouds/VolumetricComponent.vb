@@ -79,7 +79,7 @@ Public Class VolumetricComponent
         volumetricShader.FreeResources()
     End Sub
 
-    Public Sub Render(time As Single, terrainOcclusionTex As Integer)
+    Public Sub Render(time As Single, terrainOcclusionTex As Integer, colorPreset As Preset)
         volumetricShader.Use()
 
         ' Set uniforms
@@ -90,14 +90,16 @@ Public Class VolumetricComponent
 
         Dim inverseView = camera.ViewMatrix.Inverted()
         Dim inverseProjection = camera.ProjectionMatrix.Inverted()
-        Dim inverseViewProjection = (camera.ProjectionMatrix * camera.ViewMatrix).Inverted()
+        Dim inverseViewProjection = Matrix4.Mult(camera.ProjectionMatrix, camera.ViewMatrix).Inverted()
 
         volumetricShader.SetMat4("inverseView", False, inverseView)
         volumetricShader.SetMat4("inverseProjection", False, inverseProjection)
         volumetricShader.SetMat4("inverseViewProjection", False, inverseViewProjection)
         volumetricShader.SetMat4("oldViewProjection", False, oldViewProjection)
 
-        volumetricShader.SetVec3("sunColor", sun.color)
+        volumetricShader.SetVec3("CLOUDS_AMBIENT_COLOR_BOTTOM", colorPreset.cloudColorBottom)
+
+        volumetricShader.SetVec3("lightColor", colorPreset.lightColor)
         volumetricShader.SetVec3("sunDir", sun.lightDir)
         volumetricShader.SetFloat("EARTH_RADIUS", earth.radius)
         volumetricShader.SetInt("frameIter", frameIter)
@@ -127,22 +129,22 @@ Public Class VolumetricComponent
         GL.BindTexture(TextureTarget.Texture2D, terrainOcclusionTex)
 
         ' Cache view projection matrix for temporal reprojection
-        oldViewProjection = camera.ProjectionMatrix * camera.ViewMatrix
+        oldViewProjection = Matrix4.Mult(camera.ProjectionMatrix, camera.ViewMatrix)
 
         ' Render volumetric to FBO
         temporalProjection.Bind()
         quadRenderer.Render()
         temporalProjection.UnBind()
 
-        ' Increment frame iter counter modulus 16 for temporal reprojection
-        frameIter = (frameIter + 1) Mod 16
+        ' Increment frame iter counter modulus 4 for temporal reprojection bayer matrix
+        frameIter = (frameIter + 1) Mod 4
     End Sub
 
     Public Sub Blit()
         ' Blit volumetric clouds to screen with post processing
         postProcessClouds.Use()
         postProcessClouds.SetInt("textureToDraw", 0)
-        postProcessClouds.SetVec2("resolution", cloudsResolutionWidth, cloudsResolutionHeight)
+        postProcessClouds.SetVec2("resolution", New Vector2(cloudsResolutionWidth, cloudsResolutionHeight))
         GL.ActiveTexture(TextureUnit.Texture0)
         GL.BindTexture(TextureTarget.Texture2D, temporalProjection.currentFrame)
         quadRenderer.Render()

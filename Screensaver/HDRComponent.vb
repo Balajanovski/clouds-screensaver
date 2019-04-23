@@ -72,6 +72,7 @@ Public Class HDRComponent
         hdrShader.SetInt("hdrBuffer", 0)
         hdrShader.SetInt("godRaysTex", 1)
         hdrShader.SetFloat("exposure", exposure)
+        hdrShader.SetVec2("resolution", New Vector2(DisplayDevice.Default.Width, DisplayDevice.Default.Height))
 
         GL.ActiveTexture(TextureUnit.Texture0)
         GL.BindTexture(TextureTarget.Texture2D, colorBuffer)

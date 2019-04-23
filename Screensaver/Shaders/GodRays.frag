@@ -3,12 +3,12 @@
 uniform vec2 lightPositionOnScreen;
 uniform sampler2D occlusionTex;
 
-const int NUM_SAMPLES = 100;
+const int NUM_SAMPLES = 64;
 
 const float exposure = 0.45;
-const float decay = 0.96;
+const float decay = 0.98;
 const float density = 0.9;
-const float weight = 0.04;
+const float weight = 0.05;
 
 in vec2 TexCoords;
 in vec3 vPos;
