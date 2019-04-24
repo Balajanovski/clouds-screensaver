@@ -148,11 +148,6 @@ Public Class VolumetricComponent
         quadRenderer.Render()
     End Sub
 
-    Protected Overrides Sub Finalize()
-        postProcessClouds.FreeResources()
-        volumetricShader.FreeResources()
-    End Sub
-
     ' Allow retrieval of cloud occlusion for God rays
     Public ReadOnly Property OcclusionTexture As Integer
         Get

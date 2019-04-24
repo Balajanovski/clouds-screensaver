@@ -49,10 +49,6 @@ Public Class ScatteringComponent
         scatteringFrameBufferComponent.UnBind()
     End Sub
 
-    Protected Overrides Sub Finalize()
-        scatteringShader.FreeResources()
-    End Sub
-
     Public ReadOnly Property CurrentFrame As Integer
         Get
             Return scatteringFrameBufferComponent.currentFrame

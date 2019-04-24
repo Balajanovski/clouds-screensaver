@@ -6,12 +6,10 @@ Public Class ComputeShader
     Inherits ShaderBase
 
     Public Sub New(shaderSrc As String)
-        tempDir = CreateTempDirectory("temp-")
-
         ' Compile compute shader
-        ExportResource(Assembly.GetExecutingAssembly, "Screensaver", shaderSrc)
+        Dim computeCode = ExportResource(Assembly.GetExecutingAssembly, "Screensaver", shaderSrc)
         Dim computeShader = GL.CreateShader(ShaderType.ComputeShader)
-        GL.ShaderSource(computeShader, File.ReadAllText(Path.Combine(tempDir, "Screensaver." & shaderSrc)))
+        GL.ShaderSource(computeShader, computeCode)
         GL.CompileShader(computeShader)
         CheckShaderCompilationSuccess(computeShader)
 

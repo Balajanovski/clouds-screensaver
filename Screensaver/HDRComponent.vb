@@ -81,8 +81,4 @@ Public Class HDRComponent
         quadRenderer.Render()
     End Sub
 
-    Protected Overrides Sub Finalize()
-        hdrShader.FreeResources()
-    End Sub
-
 End Class

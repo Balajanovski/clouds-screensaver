@@ -10,19 +10,18 @@ Public Class Shader
     Private fragmentShader As Integer
 
     Public Sub New(vertexSrc As String, fragSrc As String)
-        tempDir = CreateTempDirectory("temp-")
 
         ' Compile vertex shader
-        ExportResource(Assembly.GetExecutingAssembly, "Screensaver", vertexSrc)
+        Dim vertexCode = ExportResource(Assembly.GetExecutingAssembly, "Screensaver", vertexSrc)
         vertexShader = GL.CreateShader(ShaderType.VertexShader)
-        GL.ShaderSource(vertexShader, File.ReadAllText(Path.Combine(tempDir, "Screensaver." & vertexSrc)))
+        GL.ShaderSource(vertexShader, vertexCode)
         GL.CompileShader(vertexShader)
         CheckShaderCompilationSuccess(vertexShader)
 
         ' Compile frag shader
-        ExportResource(Assembly.GetExecutingAssembly, "Screensaver", fragSrc)
+        Dim fragCode = ExportResource(Assembly.GetExecutingAssembly, "Screensaver", fragSrc)
         fragmentShader = GL.CreateShader(ShaderType.FragmentShader)
-        GL.ShaderSource(fragmentShader, File.ReadAllText(Path.Combine(tempDir, "Screensaver." & fragSrc)))
+        GL.ShaderSource(fragmentShader, fragCode)
         GL.CompileShader(fragmentShader)
         CheckShaderCompilationSuccess(fragmentShader)
 

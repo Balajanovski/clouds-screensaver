@@ -49,10 +49,6 @@ Public Class GodRaysComponent
         godRaysFrameBufferComponet.UnBind()
     End Sub
 
-    Protected Overrides Sub Finalize()
-        godRaysShader.FreeResources()
-    End Sub
-
     Public ReadOnly Property CurrentFrame As Integer
         Get
             Return godRaysFrameBufferComponet.currentFrame
