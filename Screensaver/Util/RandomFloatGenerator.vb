@@ -2,11 +2,10 @@
 Imports Math
 
 Public Class RandomFloatGenerator
-    Private Shared inst As RandomFloatGenerator
+    Private Shared inst As New RandomFloatGenerator()
     Private Shared random As Random
 
     Public Shared Function instance() As RandomFloatGenerator
-        inst = New RandomFloatGenerator()
         Return inst
     End Function
 
