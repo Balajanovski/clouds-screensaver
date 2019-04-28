@@ -19,6 +19,13 @@ Public Class Model
         loadModel(path)
     End Sub
 
+    Public Sub New(ByRef path As String, ByRef nLoader As Loader, formatHint As String, Optional gamma As Boolean = False)
+        loader = nLoader
+        gammaCorrection = gamma
+
+        loadModel(path, formatHint)
+    End Sub
+
     Public Sub Draw(ByRef shader As Shader)
         For Each mesh In meshes
             mesh.Draw(shader)
@@ -36,6 +43,23 @@ Public Class Model
                                                                         PostProcessSteps.FlipUVs Or
                                                                         PostProcessSteps.GenerateNormals Or
                                                                         PostProcessSteps.CalculateTangentSpace)
+
+        directory = path
+
+        processNode(scene.RootNode, scene)
+    End Sub
+
+    Private Sub loadModel(path As String, formatHint As String)
+        Dim currentAssembly = Assembly.GetExecutingAssembly
+
+        Dim modelStream As Stream _
+            = currentAssembly.GetManifestResourceStream("Screensaver." + path)
+
+        Dim importer As AssimpContext = New AssimpContext()
+        Dim scene As Scene = importer.ImportFileFromStream(modelStream, PostProcessSteps.Triangulate Or
+                                                                        PostProcessSteps.FlipUVs Or
+                                                                        PostProcessSteps.GenerateNormals Or
+                                                                        PostProcessSteps.CalculateTangentSpace, formatHint)
 
         directory = path
 
@@ -139,9 +163,10 @@ Public Class Model
                                           type As TextureType,
                                           typeName As String) As List(Of Texture)
         Dim textures As New List(Of Texture)
-        For i = 0 To mat.GetMaterialTextureCount(type) - 1
-            Dim tex As New TextureSlot()
-            mat.GetMaterialTexture(type, i, tex)
+
+        Dim tex As New TextureSlot()
+        Dim i As Integer = 0
+        While mat.GetMaterialTexture(type, i, tex)
 
             ' Check if texture was loaded before and if so, continue to next iteration: skip loading a new texture
             Dim skip As Boolean = False
@@ -161,7 +186,9 @@ Public Class Model
                 textures.Add(texture)
                 texturesLoaded.Add(texture)
             End If
-        Next
+
+            i += 1
+        End While
 
         Return textures
     End Function

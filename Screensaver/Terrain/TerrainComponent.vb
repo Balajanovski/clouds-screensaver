@@ -144,7 +144,7 @@ Public Class TerrainComponent
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, depthMapFBO)
         GL.Enable(EnableCap.CullFace)
         GL.CullFace(CullFaceMode.Front)
-        GL.FrontFace(FrontFaceDirection.Ccw)
+        GL.FrontFace(FrontFaceDirection.Cw)
         GL.Clear(ClearBufferMask.DepthBufferBit)
 
         shadowShader.Use()
@@ -231,13 +231,15 @@ Public Class TerrainComponent
         terrainFrameBufferComponent.Bind()
         GL.Enable(EnableCap.DepthTest)
         GL.DrawElements(BeginMode.Triangles, model.NumVertices, DrawElementsType.UnsignedInt, 0)
-
+        GL.Disable(EnableCap.DepthTest)
         unbindTexturedModel()
 
         ' Draw randomly placed objects
+        GL.Enable(EnableCap.Blend)
         objectComponent.DrawObjects(colorPreset)
+        GL.Disable(EnableCap.Blend)
         terrainFrameBufferComponent.UnBind()
-        GL.Disable(EnableCap.DepthTest)
+
     End Sub
 
     Public Sub Blit()

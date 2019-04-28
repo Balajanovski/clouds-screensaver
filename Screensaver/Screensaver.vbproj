@@ -192,10 +192,13 @@
     <EmbeddedResource Include="Resources\fir1\firtree1.3ds" />
     <EmbeddedResource Include="Shaders\ObjectShader.frag" />
     <EmbeddedResource Include="Shaders\ObjectShader.vert" />
-    <EmbeddedResource Include="Resources\bush\bush01.obj" />
-    <EmbeddedResource Include="Resources\bush\texture_palm_128x128.tga" />
     <EmbeddedResource Include="Shaders\BlitTextureToScreen.frag" />
     <EmbeddedResource Include="Shaders\GodRays.frag" />
+    <EmbeddedResource Include="Resources\bush\group5.3ds" />
+    <EmbeddedResource Include="Resources\bush\group31.3ds" />
+    <EmbeddedResource Include="Resources\bush\group24.3ds" />
+    <EmbeddedResource Include="Resources\bush\group21.3ds" />
+    <EmbeddedResource Include="Resources\bush\group8.3ds" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\grass.jpg" />
@@ -226,6 +229,15 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\grass_NORM.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\bush\e2aa7c23_dds.000" />
+    <EmbeddedResource Include="Resources\bush\e83822ef_dds.000" />
+    <EmbeddedResource Include="Resources\bush\M_32248717_d.000" />
+    <EmbeddedResource Include="Resources\bush\M_435c938d_d.000" />
+    <EmbeddedResource Include="Resources\bush\M_5a2b0164_d.000" />
+    <EmbeddedResource Include="Resources\bush\M_72dd6e2f_d.000" />
+    <EmbeddedResource Include="Resources\bush\M_9855bbff_d.000" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <Import Project="..\packages\AssimpNet.4.1.0\build\AssimpNet.targets" Condition="Exists('..\packages\AssimpNet.4.1.0\build\AssimpNet.targets')" />

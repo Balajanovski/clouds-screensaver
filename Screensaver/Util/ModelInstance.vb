@@ -8,6 +8,12 @@ Public Class ModelInstance
     Private modelMatrix As Matrix4
     Private position As Vector3
 
+    Public ReadOnly Property ModelPosition As Vector3
+        Get
+            Return position
+        End Get
+    End Property
+
     Public Sub New(ByRef pos As Vector3,
                    scaleFactor As Single,
                    ByRef instanceModel As Model)

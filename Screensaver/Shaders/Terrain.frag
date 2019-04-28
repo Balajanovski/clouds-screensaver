@@ -99,7 +99,7 @@ MaterialProperties getHeightMaterial() {
 	vec3 grassNormal = (texture(grassNormalTex, texCoords*(GRASS_TEX_FREQ)).xyz * 0.6 +
 					   texture(healthyGrassNormalTex, texCoords*(HEALTHY_GRASS_TEX_FREQ)).xyz * 0.2 +
 					   texture(patchyGrassNormalTex, texCoords*(PATCHY_GRASS_TEX_FREQ)).xyz * 0.2);
-	grassNormal = mix(grassNormal, vec3(0.0, 1.0, 0.0), 0.28); // Make bump mapping less intense
+	grassNormal = mix(grassNormal, vec3(0.0, 1.0, 0.0), 0.2);
 
 	vec3 upVector = vec3(0, 1, 0);
 

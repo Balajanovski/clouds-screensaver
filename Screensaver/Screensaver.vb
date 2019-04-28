@@ -56,6 +56,7 @@ Public Class Screensaver
 
         GL.Enable(EnableCap.DepthTest)
         GL.ClearColor(0.0, 0.0, 0.0, 0.0)
+        GL.Enable(EnableCap.Blend)
         GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha)
 
         earth = New EarthManager(600000.0)

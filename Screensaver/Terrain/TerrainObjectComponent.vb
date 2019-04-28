@@ -1,6 +1,7 @@
 ﻿Imports System.Collections.Generic
 Imports OpenTK
 Imports Random
+Imports OpenTK.Graphics.OpenGL4
 
 Public Class TerrainObjectComponent
     Private objectShader As Shader
@@ -20,7 +21,9 @@ Public Class TerrainObjectComponent
 
     Private camera As Camera
 
-    Private ReadOnly modelScaleFactors() As Double = {1.2, 0.012}
+    Private sortedObjectsByDistanceFromCam As Boolean
+
+    Private ReadOnly modelScaleFactors() As Double = {2.4, 2.0, 2.0, 2.0, 2.0}
 
     Public Sub New(objectVertexShaderSrc As String,
                    objectFragmentShaderSrc As String,
@@ -35,9 +38,13 @@ Public Class TerrainObjectComponent
         terrAmplitude = terrainAmplitude
         terrModelMatrix = terrainModelMatrix
         sun = sunManager
+        sortedObjectsByDistanceFromCam = False
 
         models.Add(New Model("firtree1.3ds", loader))
-        models.Add(New Model("bush01.obj", loader))
+        models.Add(New Model("group5.3ds", loader))
+        models.Add(New Model("group31.3ds", loader))
+        models.Add(New Model("group24.3ds", loader))
+        models.Add(New Model("group21.3ds", loader))
     End Sub
 
     ' Adds a tree at the specified location if it abides by a set of conditions for generation
@@ -57,6 +64,8 @@ Public Class TerrainObjectComponent
             Dim scaleFactor = (1.5 + (RandomFloatGenerator.instance.NextFloat() Mod 0.25)) * modelScaleFactors(modelChosen)
             objects.Add(New ModelInstance(objectPos, scaleFactor, models(modelChosen)))
         End If
+
+        sortedObjectsByDistanceFromCam = False
     End Sub
 
     Public Sub DrawObjects(ByRef colorPreset As Preset)
@@ -74,6 +83,12 @@ Public Class TerrainObjectComponent
     End Sub
 
     Public Sub DrawObjects(ByRef shader As Shader, ByRef colorPreset As Preset, uniformBinding As Action(Of Shader, Preset))
+        If Not sortedObjectsByDistanceFromCam Then
+            objects = objects.OrderByDescending(Function(m) Vector3.Distance(m.ModelPosition, camera.Position)).ToList()
+
+            sortedObjectsByDistanceFromCam = True
+        End If
+
         For Each obj In objects
             shader.Use()
 

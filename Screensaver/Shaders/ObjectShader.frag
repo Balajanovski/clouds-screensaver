@@ -35,13 +35,16 @@ vec3 specular(vec3 normal){
 }
 
 void main() {    
-    vec4 objectColor = texture(texture_diffuse1, TexCoords) * texture(texture_emmissive1, TexCoords);
+	vec4 texDiffuse = texture(texture_diffuse1, TexCoords);
+	float alpha = clamp(texDiffuse.a*2, 0.0, 1.0);
+    vec4 objectColor = vec4(texDiffuse.rgb, alpha);
 
 	vec3 amb = ambient();
 	vec3 norm = normalize(surfaceNormal);
 	vec3 diff = diffuse(norm);
 	vec3 spec = specular(norm);
 
-	occlusionTex = vec4(1.0);
+	occlusionTex = vec4(vec3(1.0), alpha);
 	FragColor = objectColor*vec4(amb + diff + spec, 1.0);
+	gl_FragDepth = gl_FragCoord.z / alpha;
 }

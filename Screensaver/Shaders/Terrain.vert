@@ -39,7 +39,7 @@ void main() {
 	vec3 B = normalize(vec3(model * vec4(aBitangent, 0.0)));
 	vec3 N = normalize(vec3(model * vec4(aNormal, 0.0)));
 
-	TBN = mat3(T, B, N);
+	TBN = transpose(mat3(T, B, N));
 
 	toCameraVector = normalize(( inverse(viewMatrix) * vec4(0.0, 0.0, 0.0, 0.1) ).xyz - worldPos.xyz);
 	vPos = aPos;
