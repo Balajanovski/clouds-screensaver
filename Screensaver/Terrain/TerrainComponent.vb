@@ -155,7 +155,7 @@ Public Class TerrainComponent
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, depthMapFBO)
         GL.Enable(EnableCap.CullFace)
         GL.CullFace(CullFaceMode.Front)
-        GL.FrontFace(FrontFaceDirection.Ccw)
+        GL.FrontFace(FrontFaceDirection.Cw)
         GL.Clear(ClearBufferMask.DepthBufferBit)
 
         shadowShader.Use()
@@ -170,22 +170,18 @@ Public Class TerrainComponent
 
                 Dim shadowBoxCenter = shadowBox.getCenter()
                 Dim lookAtPos = shadowBoxCenter
-                Dim lightCamPos = (sun.position * 1000.0) + shadowBoxCenter
+                Dim lightCamPos = (sun.position * 1000.0) + camera.Position
                 lightView = Matrix4.LookAt(lightCamPos, lookAtPos, New Vector3(0.0, 1.0, 0.0))
 
                 shadowShader.SetMat4("lightSpaceProjection", False, lightProjection)
                 shadowShader.SetMat4("lightSpaceView", False, lightView)
             End Sub
 
-        'GL.Enable(EnableCap.PolygonOffsetFill)
-        'GL.PolygonOffset(1.0, 4096.0)
-
         ' Draw randomly placed objects
         objectComponent.DrawObjects(shadowShader, colorPreset, shadowShaderUniformBinding)
 
         GL.CullFace(CullFaceMode.Back)
         GL.Disable(EnableCap.CullFace)
-        GL.Disable(EnableCap.PolygonOffsetFill)
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0)
         GL.Viewport(0, 0, terrainResolutionWidth, terrainResolutionHeight)
     End Sub

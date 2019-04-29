@@ -23,7 +23,7 @@ Public Class TerrainObjectComponent
 
     Private sortedObjectsByDistanceFromCam As Boolean
 
-    Private ReadOnly modelScaleFactors() As Double = {2.4, 2.0, 2.0, 2.0, 2.0}
+    Private ReadOnly modelScaleFactors() As Double = {2.4}
 
     Public Sub New(objectVertexShaderSrc As String,
                    objectFragmentShaderSrc As String,
@@ -41,10 +41,6 @@ Public Class TerrainObjectComponent
         sortedObjectsByDistanceFromCam = False
 
         models.Add(New Model("firtree1.3ds", loader))
-        models.Add(New Model("group5.3ds", loader))
-        models.Add(New Model("group31.3ds", loader))
-        models.Add(New Model("group24.3ds", loader))
-        models.Add(New Model("group21.3ds", loader))
     End Sub
 
     ' Adds a tree at the specified location if it abides by a set of conditions for generation
