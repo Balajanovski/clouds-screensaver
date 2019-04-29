@@ -35,7 +35,7 @@ Public Class Terrain
 
     Private loader As Loader
 
-    Private treeComponent As TerrainObjectComponent
+    Private terrainObjectComponent As TerrainObjectComponent
 
     Private heightMapMask As Bitmap
 
@@ -48,7 +48,7 @@ Public Class Terrain
                    ByRef loaderComponent As Loader,
                    ByRef treeComp As TerrainObjectComponent)
         loader = loaderComponent
-        treeComponent = treeComp
+        terrainObjectComponent = treeComp
         terrainNoiseWidth = terrainWidth
         terrainNoiseLength = terrainLength
         terrainAmpl = terrainAmplitude
@@ -103,9 +103,9 @@ Public Class Terrain
                 Dim upVector As Vector3 = New Vector3(0.0, 1.0, 0.0)
                 Dim normalDot As Single = Math.Abs(Vector3.Dot(normal, upVector))
 
-                ' If the terrain is not too sloped, add a tree
+                ' If the terrain is not too sloped, add a tree/bush
                 If normalDot > 0.77 Then
-                    treeComponent.AddObjectAtLocation(terrainVertexPosition)
+                    terrainObjectComponent.AddObjectAtLocation(terrainVertexPosition)
                 End If
 
                 textures(vertexPointer * 2) = CType(j, Single) / CType(vertexWidthCount - 1, Single)

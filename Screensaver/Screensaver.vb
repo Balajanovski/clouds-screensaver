@@ -132,9 +132,7 @@ Public Class Screensaver
                                                               Presets.SunsetPreset)
 
         ' Shadows not rendered if sun is too low in sky
-        If sun.position.Y > 0.08 Then
-            terrainComponent.RenderShadowMap(colorConfiguration)
-        End If
+        terrainComponent.RenderShadowMap(colorConfiguration)
 
         scatteringComponent.Render(time, colorConfiguration)
         terrainComponent.Render(colorConfiguration)

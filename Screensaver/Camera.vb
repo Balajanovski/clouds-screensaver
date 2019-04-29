@@ -69,6 +69,17 @@ Public Class Camera
         Return New Vector2(v.X, v.Y)
     End Function
 
+    Public Const NEAR_PLANE As Single = 0.2
+
+    Private scrWidth As Single
+    Private scrHeight As Single
+
+    Public ReadOnly Property AspectRatio As Single
+        Get
+            Return scrWidth / scrHeight
+        End Get
+    End Property
+
     Public Sub New(newPos As Vector3,
                    lookAtTarget As Vector3,
                    screenWidth As Single,
@@ -77,9 +88,11 @@ Public Class Camera
         lookAt = lookAtTarget
         pos = newPos
         fieldOfView = newFov
+        scrWidth = screenWidth
+        scrHeight = screenHeight
 
         view = Matrix4.LookAt(pos, lookAt, New Vector3(0.0, 1.0, 0.0))
         projection = Matrix4.CreatePerspectiveFieldOfView(CType(Math.PI, Single) * (fieldOfView / 180.0),
-                                                          screenWidth / screenHeight, 0.2, 256.0)
+                                                          screenWidth / screenHeight, NEAR_PLANE, 256.0)
     End Sub
 End Class

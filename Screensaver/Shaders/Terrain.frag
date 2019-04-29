@@ -156,7 +156,7 @@ vec3 specular(vec3 normal){
 	return specular;
 }
 
-float shadowCalculation(vec4 fragPosLightSpace) {
+float shadowCalculation(vec4 fragPosLightSpace, vec3 normal) {
 	vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
 	projCoords = projCoords * 0.5 + 0.5;
 	
@@ -166,10 +166,11 @@ float shadowCalculation(vec4 fragPosLightSpace) {
 	//float shadow = currentDepth - 0.00005 > closestDepth ? 1.0 : 0.0;
 	float shadow = 0.0;
 	vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+	float bias = max(0.0001 * (1.0 - dot(surfaceNormal, sunDir)), 0.00001);  
 	for (int x = -1; x <= 1; ++x) {
 		for (int y = -1; y <= 1; ++y) {
 			float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x,y) * texelSize).r;
-			shadow += currentDepth - 0.0005 > pcfDepth ? 1.0 : 0.0;
+			shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
 		}
 	}
 	shadow /= 9.0;
@@ -188,7 +189,7 @@ void main() {
 	vec3 diff = diffuse(heightMaterial.normal);
 	vec3 spec = specular(heightMaterial.normal);
 
-	float shadow = 1.0 - shadowCalculation(fragPosLightSpace);
+	float shadow = 1.0 - shadowCalculation(fragPosLightSpace, heightMaterial.normal);
 
 	// Perspective divide
 	vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;

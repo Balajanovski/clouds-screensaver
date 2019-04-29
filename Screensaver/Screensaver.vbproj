@@ -113,6 +113,7 @@
     <Compile Include="GodRays\GodRaysFrameBufferComponent.vb" />
     <Compile Include="HDRComponent.vb" />
     <Compile Include="Scattering\ScatteringFrameBufferComponent.vb" />
+    <Compile Include="Terrain\ShadowBox.vb" />
     <Compile Include="Terrain\Terrain.vb" />
     <Compile Include="Terrain\TerrainFrameBufferComponent.vb" />
     <Compile Include="Terrain\TerrainObjectComponent.vb" />

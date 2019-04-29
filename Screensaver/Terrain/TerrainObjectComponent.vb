@@ -51,10 +51,10 @@ Public Class TerrainObjectComponent
     Public Sub AddObjectAtLocation(ByRef pos As Vector3)
         Dim objectDistributionChance = (random.Next() Mod 400.0)
 
-        Dim objectPos = (New Vector4(pos, 1.0) * terrModelMatrix).Xyz
-        Dim distFromCameraSquared = ((objectPos.X - camera.Position.X) * (objectPos.X - camera.Position.X)) + ((objectPos.Z - camera.Position.Z) * (objectPos.Z - camera.Position.Z))
+        Dim objectPos As Vector3 = (New Vector4(pos, 1.0) * terrModelMatrix).Xyz
+        Dim distFromCameraSquared = Vector3.DistanceSquared(objectPos, camera.Position)
 
-        ' If the trees are below a certain altitude and the random number generator places them there then add a new tree
+        ' If the trees are below a certain altitude, in the camera's radius and the random number generator places them there then add a new tree
         If pos.Y < (0.7 * terrAmplitude) And
             objectDistributionChance <= 1.0 And
             distFromCameraSquared <= 25000.0 And

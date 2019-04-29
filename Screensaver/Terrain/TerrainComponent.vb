@@ -22,6 +22,8 @@ Public Class TerrainComponent
     Private shader As Shader
     Private shadowShader As Shader
 
+    Private shadowBox As ShadowBox
+
     Private amplitude As Single
 
     ' Textures of terrain
@@ -54,8 +56,8 @@ Public Class TerrainComponent
 
     Private fogFalloff As Single
 
-    Private Const SHADOW_WIDTH As Integer = 4096
-    Private Const SHADOW_HEIGHT As Integer = 4096
+    Private Const SHADOW_WIDTH As Integer = 10000
+    Private Const SHADOW_HEIGHT As Integer = 10000
 
     Public Sub New(shaderVertSrc As String,
                    shaderFragSrc As String,
@@ -123,8 +125,8 @@ Public Class TerrainComponent
                       SHADOW_WIDTH, SHADOW_HEIGHT, 0, PixelFormat.DepthComponent, PixelType.Float, IntPtr.Zero)
         GL.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, All.Nearest)
         GL.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, All.Nearest)
-        GL.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, All.Repeat)
-        GL.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, All.Repeat)
+        GL.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, All.ClampToBorder)
+        GL.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, All.ClampToBorder)
 
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, depthMapFBO)
         GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthAttachment, TextureTarget.Texture2D, depthMap, 0)
@@ -136,41 +138,60 @@ Public Class TerrainComponent
         End If
 
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0)
+
+        ' Create shadow box for frustum creation in shadow mapping
+        Dim lookAtPos = camera.Position + New Vector3(50, 0, 80)
+        Dim lightCamPos = (sun.position * 1000.0) + camera.Position + New Vector3(50, 0, 80)
+        lightView = Matrix4.LookAt(lightCamPos, lookAtPos, New Vector3(0.0, 1.0, 0.0))
+        lightView *= Matrix4.CreateTranslation(New Vector3(-50, 0, -80))
+        shadowBox = New ShadowBox(lightView, camera)
     End Sub
 
     Public Sub RenderShadowMap(colorPreset As Preset)
+        shadowBox.update()
+
         GL.Viewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT)
         GL.Enable(EnableCap.DepthTest)
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, depthMapFBO)
         GL.Enable(EnableCap.CullFace)
         GL.CullFace(CullFaceMode.Front)
-        GL.FrontFace(FrontFaceDirection.Cw)
+        GL.FrontFace(FrontFaceDirection.Ccw)
         GL.Clear(ClearBufferMask.DepthBufferBit)
 
         shadowShader.Use()
 
         Dim shadowShaderUniformBinding =
             Sub(shadowShader As Shader, preset As Preset)
-                lightProjection = Matrix4.CreateOrthographic(240.0, 240.0, 0.2, 2500.0)
+                lightProjection = Matrix4.CreateOrthographic(shadowBox.getWidth(), shadowBox.getHeight, 0.01, shadowBox.getLength())
 
-                Dim lookAtPos = camera.Position + New Vector3(50, 0, 80)
-                Dim lightCamPos = (sun.position * 1000.0) + camera.Position + New Vector3(50, 0, 80)
+                Dim shadowBoxCenter = shadowBox.getCenter()
+                Dim lookAtPos = camera.Position + shadowBoxCenter
+                Dim lightCamPos = (sun.position * 1000.0) + camera.Position + shadowBoxCenter
                 lightView = Matrix4.LookAt(lightCamPos, lookAtPos, New Vector3(0.0, 1.0, 0.0))
-                lightView *= Matrix4.CreateTranslation(New Vector3(-50, 0, -80))
+                lightView = Matrix4.Mult(lightView,
+                                         Matrix4.CreateTranslation(New Vector3(-shadowBoxCenter.X,
+                                                                               -shadowBoxCenter.Y,
+                                                                               -shadowBoxCenter.Z)))
+
                 shadowShader.SetMat4("lightSpaceProjection", False, lightProjection)
                 shadowShader.SetMat4("lightSpaceView", False, lightView)
             End Sub
 
+        'GL.Enable(EnableCap.PolygonOffsetFill)
+        'GL.PolygonOffset(1.0, 4096.0)
+
         ' Draw randomly placed objects
         objectComponent.DrawObjects(shadowShader, colorPreset, shadowShaderUniformBinding)
 
+        GL.CullFace(CullFaceMode.Back)
         GL.Disable(EnableCap.CullFace)
+        GL.Disable(EnableCap.PolygonOffsetFill)
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0)
         GL.Viewport(0, 0, terrainResolutionWidth, terrainResolutionHeight)
     End Sub
 
     Public Sub Render(colorPreset As Preset)
-        configureShaderAndMatrices()
+        configureShaderAndMatrices(shader)
 
         prepareTerrain(terrain)
 
@@ -278,7 +299,7 @@ Public Class TerrainComponent
         loadShader.SetMat4("model", False, terrainModel)
     End Sub
 
-    Private Sub configureShaderAndMatrices()
+    Private Sub configureShaderAndMatrices(shader As Shader)
         shader.Use()
 
         ' Send transformation matrices to shader
