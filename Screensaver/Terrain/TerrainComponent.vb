@@ -162,16 +162,16 @@ Public Class TerrainComponent
 
         Dim shadowShaderUniformBinding =
             Sub(shadowShader As Shader, preset As Preset)
-                lightProjection = Matrix4.CreateOrthographic(shadowBox.getWidth(), shadowBox.getHeight, 0.01, shadowBox.getLength())
+                lightProjection = Matrix4.CreateOrthographic(shadowBox.getWidth(), shadowBox.getHeight(), 0.2, 2500)
+
+                Dim shadowWidth = shadowBox.getWidth()
+                Dim shadowHeight = shadowBox.getHeight()
+                Dim shaodwLength = shadowBox.getLength()
 
                 Dim shadowBoxCenter = shadowBox.getCenter()
-                Dim lookAtPos = camera.Position + shadowBoxCenter
-                Dim lightCamPos = (sun.position * 1000.0) + camera.Position + shadowBoxCenter
+                Dim lookAtPos = shadowBoxCenter
+                Dim lightCamPos = (sun.position * 1000.0) + shadowBoxCenter
                 lightView = Matrix4.LookAt(lightCamPos, lookAtPos, New Vector3(0.0, 1.0, 0.0))
-                lightView = Matrix4.Mult(lightView,
-                                         Matrix4.CreateTranslation(New Vector3(-shadowBoxCenter.X,
-                                                                               -shadowBoxCenter.Y,
-                                                                               -shadowBoxCenter.Z)))
 
                 shadowShader.SetMat4("lightSpaceProjection", False, lightProjection)
                 shadowShader.SetMat4("lightSpaceView", False, lightView)

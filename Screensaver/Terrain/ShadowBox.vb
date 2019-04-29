@@ -7,8 +7,8 @@ Public Class ShadowBox
 
     Private Shared OFFSET As Single = 10
     Private Shared UP As Vector4 = New Vector4(0, 1, 0, 0)
-    Private Shared FORWARD As Vector4 = New Vector4(0, 0, -1, 0) ' Possible error source in that forward may not be correct. Check if not working!!!!!
-    Private Shared SHADOW_DISTANCE As Single = 100
+    Private Shared FORWARD As Vector4 = New Vector4(0, 0, 1, 0) ' Possible error source in that forward may not be correct. Check if not working!!!!!
+    Private Shared SHADOW_DISTANCE As Single = 200
 
     Private minX, maxX As Single
     Private minY, maxY As Single
@@ -159,7 +159,7 @@ Public Class ShadowBox
                 upVector.Y * nearHeight, upVector.Z * nearHeight))
         Dim nearBottom As Vector3 = Vector3.Add(centerNear, New Vector3(downVector.X * nearHeight,
                 downVector.Y * nearHeight, downVector.Z * nearHeight))
-        Dim points(8) As Vector4
+        Dim points(7) As Vector4
         points(0) = calculateLightSpaceFrustumCorner(farTop, rightVector, farWidth)
         points(1) = calculateLightSpaceFrustumCorner(farTop, leftVector, farWidth)
         points(2) = calculateLightSpaceFrustumCorner(farBottom, rightVector, farWidth)
