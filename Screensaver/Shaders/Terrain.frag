@@ -17,7 +17,6 @@ uniform sampler2D rockNormalMap;
 uniform sampler2D shadowMap;
 uniform float snowHeight;
 uniform float grassCoverage;
-uniform float dispFactor;
 
 uniform vec3 fogColor;
 uniform float fogFalloff;

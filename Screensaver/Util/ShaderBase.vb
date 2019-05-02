@@ -15,8 +15,6 @@ Public MustInherit Class ShaderBase
         End Set
     End Property
 
-    Protected tempDir As String
-
     Public Sub Use()
         GL.UseProgram(shaderID)
     End Sub

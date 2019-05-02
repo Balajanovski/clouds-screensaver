@@ -239,7 +239,6 @@ Public Class TerrainComponent
         ' Set fog parameters
         shader.SetFloat("fogFalloff", fogFalloff * 0.000001)
         shader.SetVec3("fogColor", colorPreset.fogColor)
-        shader.SetFloat("dispFactor", 20.0)
 
         ' Set camera parameter
         shader.SetVec3("cameraPos", camera.Position)

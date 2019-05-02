@@ -5,10 +5,10 @@
 ' Original available here: https://www.dropbox.com/sh/g9vnfiubdglojuh/AACpq1KDpdmB8ZInYxhsKj2Ma/shadows?dl=0&preview=ShadowBox.java&subfolder_nav_tracking=1
 Public Class ShadowBox
 
-    Private Shared OFFSET As Single = 10
-    Private Shared UP As Vector4 = New Vector4(0, 1, 0, 0)
-    Private Shared FORWARD As Vector4 = New Vector4(0, 0, 1, 0) ' Possible error source in that forward may not be correct. Check if not working!!!!!
-    Private Shared SHADOW_DISTANCE As Single = 100
+    Private Const OFFSET As Single = 10
+    Private Shared ReadOnly UP As Vector4 = New Vector4(0, 1, 0, 0)
+    Private Shared ReadOnly FORWARD As Vector4 = New Vector4(0, 0, 1, 0)
+    Private Const SHADOW_DISTANCE As Single = 100
 
     Private minX, maxX As Single
     Private minY, maxY As Single

@@ -12,7 +12,7 @@ Public Class GodRaysComponent
 
     Private sun As SunManager
 
-    Private godRaysFrameBufferComponet As GodRaysFrameBufferComponent
+    Private godRaysFrameBufferComponent As GodRaysFrameBufferComponent
 
     Private camera As Camera
 
@@ -26,7 +26,7 @@ Public Class GodRaysComponent
         quadRenderer = screenQuadRenderer
         sun = sunmanager
         camera = cam
-        godRaysFrameBufferComponet = New GodRaysFrameBufferComponent(godRaysWidth, godRaysHeight)
+        godRaysFrameBufferComponent = New GodRaysFrameBufferComponent(godRaysWidth, godRaysHeight)
 
         godRaysShader = New Shader(vertexShaderSrc, fragmentShaderSrc)
     End Sub
@@ -43,15 +43,15 @@ Public Class GodRaysComponent
         GL.ActiveTexture(TextureUnit.Texture0)
         GL.BindTexture(TextureTarget.Texture2D, occlusionTex)
 
-        godRaysFrameBufferComponet.Bind()
+        godRaysFrameBufferComponent.Bind()
         GL.Clear(ClearBufferMask.ColorBufferBit)
         quadRenderer.Render()
-        godRaysFrameBufferComponet.UnBind()
+        godRaysFrameBufferComponent.UnBind()
     End Sub
 
     Public ReadOnly Property CurrentFrame As Integer
         Get
-            Return godRaysFrameBufferComponet.currentFrame
+            Return godRaysFrameBufferComponent.currentFrame
         End Get
     End Property
 End Class

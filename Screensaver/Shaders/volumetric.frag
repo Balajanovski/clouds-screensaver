@@ -34,13 +34,14 @@ uniform sampler2D curlNoise;
 uniform sampler2D lastFrame;
 uniform sampler2D lastFrameAlphaness;
 
-// Terrain occlusion, for excluding texels from calculations as an optimization
+// Terrain occlusion, for excluding texels from calculations as an optimization as well as 
+// for drawing screen space God rays
 uniform sampler2D terrainOcclusion;
 
 // Background texture for blending with clouds
 uniform sampler2D background;
 
-// Frame iteration counter for temporal reprojection mod 16
+// Frame iteration counter for temporal reprojection mod 4
 uniform int frameIter;
 
 // Math constants

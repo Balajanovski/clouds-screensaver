@@ -149,7 +149,6 @@
     <Compile Include="SunManager.vb" />
     <Compile Include="Terrain\TerrainComponent.vb" />
     <Compile Include="Util\RawModel.vb" />
-    <Compile Include="Util\StreamExtensions.vb" />
     <Compile Include="Clouds\VolumetricCloudsFrameBuffer.vb" />
     <Compile Include="Util\ComputeShader.vb" />
     <Compile Include="Util\Shader.vb" />

@@ -20,7 +20,7 @@ Public Class Screensaver
     ' Volumetric cloud raymarching
     Private volumetricComponent As VolumetricComponent
 
-    ' Rasteurized randomly generated terrain
+    ' Rasterized randomly generated terrain
     Private terrainComponent As TerrainComponent
 
     ' God / crepuscular rays
