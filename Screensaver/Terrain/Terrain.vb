@@ -200,7 +200,7 @@ Public Class Terrain
         Dim currentAssembly = Assembly.GetExecutingAssembly
 
         Dim imageStream As Stream _
-            = currentAssembly.GetManifestResourceStream("Screensaver." + heightMapMaskSrc)
+            = currentAssembly.GetManifestResourceStream("Mountains." + heightMapMaskSrc)
         Dim image = New Bitmap(imageStream)
 
         Return image

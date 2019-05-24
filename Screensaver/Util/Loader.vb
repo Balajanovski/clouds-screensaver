@@ -27,7 +27,7 @@ Public Class Loader
         Dim currentAssembly = Assembly.GetExecutingAssembly
 
         Dim imageStream As Stream _
-            = currentAssembly.GetManifestResourceStream("Screensaver." + fileName)
+            = currentAssembly.GetManifestResourceStream("Mountains." + fileName)
         Dim image = New Bitmap(imageStream)
 
         Dim textureID As Integer = GL.GenTexture()

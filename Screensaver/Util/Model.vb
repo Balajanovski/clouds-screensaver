@@ -36,7 +36,7 @@ Public Class Model
         Dim currentAssembly = Assembly.GetExecutingAssembly
 
         Dim modelStream As Stream _
-            = currentAssembly.GetManifestResourceStream("Screensaver." + path)
+            = currentAssembly.GetManifestResourceStream("Mountains." + path)
 
         Dim importer As AssimpContext = New AssimpContext()
         Dim scene As Scene = importer.ImportFileFromStream(modelStream, PostProcessSteps.Triangulate Or
@@ -53,7 +53,7 @@ Public Class Model
         Dim currentAssembly = Assembly.GetExecutingAssembly
 
         Dim modelStream As Stream _
-            = currentAssembly.GetManifestResourceStream("Screensaver." + path)
+            = currentAssembly.GetManifestResourceStream("Mountains." + path)
 
         Dim importer As AssimpContext = New AssimpContext()
         Dim scene As Scene = importer.ImportFileFromStream(modelStream, PostProcessSteps.Triangulate Or

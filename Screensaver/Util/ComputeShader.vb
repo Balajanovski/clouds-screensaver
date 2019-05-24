@@ -7,7 +7,7 @@ Public Class ComputeShader
 
     Public Sub New(shaderSrc As String)
         ' Compile compute shader
-        Dim computeCode = ExportResource(Assembly.GetExecutingAssembly, "Screensaver", shaderSrc)
+        Dim computeCode = ExportResource(Assembly.GetExecutingAssembly, "Mountains", shaderSrc)
         Dim computeShader = GL.CreateShader(ShaderType.ComputeShader)
         GL.ShaderSource(computeShader, computeCode)
         GL.CompileShader(computeShader)

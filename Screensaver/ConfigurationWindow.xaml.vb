@@ -71,4 +71,10 @@ Public Class ConfigurationWindow
 
         cloudsSpeedLabel.Content = "Cloud Speed (Value: " & String.Format("{0:0.0}", cloudsSpeedSlider.Value) & "):"
     End Sub
+
+    Private Sub TerrainFrequencySlider_ValueChanged(sender As Object, e As Windows.RoutedPropertyChangedEventArgs(Of Double)) Handles terrainFrequencySlider.ValueChanged
+        savedSettings = False
+
+        terrainFrequencyLabel.Content = "Terrain Frequency (Value: " & String.Format("{0:0.00}", terrainFrequencySlider.Value) & "):"
+    End Sub
 End Class
