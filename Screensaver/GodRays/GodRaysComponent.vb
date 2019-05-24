@@ -16,13 +16,15 @@ Public Class GodRaysComponent
 
     Private camera As Camera
 
-    Public Sub New(vertexShaderSrc As String,
+    Public Sub New(screenWidth As Integer,
+                   screenHeight As Integer,
+                   vertexShaderSrc As String,
                    fragmentShaderSrc As String,
                    ByRef sunmanager As SunManager,
                    ByRef cam As Camera,
                    ByRef screenQuadRenderer As ScreenQuadRenderer)
-        godRaysWidth = DisplayDevice.Default.Width * 0.5
-        godRaysHeight = DisplayDevice.Default.Height * 0.5
+        godRaysWidth = screenWidth * 0.5
+        godRaysHeight = screenHeight * 0.5
         quadRenderer = screenQuadRenderer
         sun = sunmanager
         camera = cam

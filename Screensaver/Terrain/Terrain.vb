@@ -12,7 +12,7 @@ Public Class Terrain
         .Seed = New Random().Next,
         .Lacunarity = 3.0,
         .OctaveCount = 5,
-        .Frequency = 1.5
+        .Frequency = ConfigManager.Instance.TerrainFrequency
     }
 
     Private amplitudeAdjustedRidgedMulti As New Multiply() With {

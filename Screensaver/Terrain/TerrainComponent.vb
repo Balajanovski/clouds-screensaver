@@ -56,10 +56,12 @@ Public Class TerrainComponent
 
     Private fogFalloff As Single
 
-    Private Const SHADOW_WIDTH As Integer = 10000
-    Private Const SHADOW_HEIGHT As Integer = 10000
+    Private ReadOnly SHADOW_WIDTH As Integer = 10000 * ConfigManager.Instance.ResolutionRatio
+    Private ReadOnly SHADOW_HEIGHT As Integer = 10000 * ConfigManager.Instance.ResolutionRatio
 
-    Public Sub New(shaderVertSrc As String,
+    Public Sub New(screenWidth As Integer,
+                   screenHeight As Integer,
+                   shaderVertSrc As String,
                    shaderFragSrc As String,
                    shadowShaderVertexSrc As String,
                    shadowShaderFragSrc As String,
@@ -77,8 +79,8 @@ Public Class TerrainComponent
         sun = sunManager
         loader = loaderComponent
         amplitude = terrainAmplitude
-        terrainResolutionWidth = DisplayDevice.Default.Width
-        terrainResolutionHeight = DisplayDevice.Default.Height
+        terrainResolutionWidth = screenWidth
+        terrainResolutionHeight = screenHeight
         terrainFrameBufferComponent = New TerrainFrameBufferComponent(terrainResolutionWidth, terrainResolutionHeight)
         quadRenderer = screenQuadRenderer
         textureBlitterShader = New Shader("ScreenQuadRenderer.vert", "BlitTextureToScreen.frag")
@@ -166,7 +168,7 @@ Public Class TerrainComponent
 
                 Dim shadowWidth = shadowBox.getWidth()
                 Dim shadowHeight = shadowBox.getHeight()
-                Dim shaodwLength = shadowBox.getLength()
+                Dim shadowLength = shadowBox.getLength()
 
                 Dim shadowBoxCenter = shadowBox.getCenter()
                 Dim lookAtPos = shadowBoxCenter

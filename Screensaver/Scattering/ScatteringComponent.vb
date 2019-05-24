@@ -17,13 +17,13 @@ Public Class ScatteringComponent
     Private scatteringResWidth As Integer
     Private scatteringResHeight As Integer
 
-    Public Sub New(vertexSrc As String, fragSrc As String, ByRef quadRen As ScreenQuadRenderer, ByRef cam As Camera, ByRef earthManager As EarthManager, ByRef sunManager As SunManager)
+    Public Sub New(screenWidth As Integer, screenHeight As Integer, vertexSrc As String, fragSrc As String, ByRef quadRen As ScreenQuadRenderer, ByRef cam As Camera, ByRef earthManager As EarthManager, ByRef sunManager As SunManager)
         quadRenderer = quadRen
         camera = cam
         earth = earthManager
         sun = sunManager
-        scatteringResWidth = DisplayDevice.Default.Width
-        scatteringResHeight = DisplayDevice.Default.Height
+        scatteringResWidth = screenWidth
+        scatteringResHeight = screenHeight
 
         scatteringShader = New Shader(vertexSrc, fragSrc)
         scatteringFrameBufferComponent = New ScatteringFrameBufferComponent(scatteringResWidth, scatteringResHeight)

@@ -32,14 +32,16 @@ Public Class VolumetricComponent
     Private ReadOnly cloudsResolutionWidth As Integer
     Private ReadOnly cloudsResolutionHeight As Integer
 
-    Public Sub New(vertexSrc As String,
+    Public Sub New(screenWidth As Integer,
+                   screenHeight As Integer,
+                   vertexSrc As String,
                    fragSrc As String,
                    ByRef quadRen As ScreenQuadRenderer,
                    ByRef cam As Camera,
                    ByRef earthManager As EarthManager,
                    ByRef sunManager As SunManager)
-        cloudsResolutionWidth = DisplayDevice.Default.Width * 0.5
-        cloudsResolutionHeight = DisplayDevice.Default.Height * 0.5
+        cloudsResolutionWidth = screenWidth * 0.5
+        cloudsResolutionHeight = screenHeight * 0.5
         temporalProjection = New VolumetricCloudsFrameBuffer(cloudsResolutionWidth, cloudsResolutionHeight)
 
         volumetricShader = New Shader(vertexSrc, fragSrc)
@@ -56,14 +58,24 @@ Public Class VolumetricComponent
         weatherNoiseGen = New NoiseGenerator2D("GenerateWeatherTexture.comp")
         curlNoiseGen = New NoiseGenerator2D("Generate2DCurlNoise.comp")
 
-        perlinWorleyNoise = perlinWorleyNoiseGen.GenerateNoise(128, 128, 128, SizedInternalFormat.Rgba8)
+        perlinWorleyNoise = perlinWorleyNoiseGen.GenerateNoise(128,
+                                                               128,
+                                                               128,
+                                                               SizedInternalFormat.Rgba8)
 
-        worleyNoise = worleyNoiseGen.GenerateNoise(32, 32, 32, SizedInternalFormat.Rgba8)
+        worleyNoise = worleyNoiseGen.GenerateNoise(32,
+                                                   32,
+                                                   32,
+                                                   SizedInternalFormat.Rgba8)
 
         weatherNoiseGen.Seed(RandomFloatGenerator.instance().NextFloat())
-        weatherNoise = weatherNoiseGen.GenerateNoise(1024, 1024, SizedInternalFormat.Rgba8)
+        weatherNoise = weatherNoiseGen.GenerateNoise(1024,
+                                                     1024,
+                                                     SizedInternalFormat.Rgba8)
 
-        curlNoise = curlNoiseGen.GenerateNoise(128, 128, SizedInternalFormat.Rgba8)
+        curlNoise = curlNoiseGen.GenerateNoise(128,
+                                               128,
+                                               SizedInternalFormat.Rgba8)
 
 
         perlinWorleyNoiseGen.AwaitComputationEnd()
@@ -99,6 +111,12 @@ Public Class VolumetricComponent
         volumetricShader.SetFloat("EARTH_RADIUS", earth.radius)
         volumetricShader.SetInt("frameIter", frameIter)
 
+        ' Set configuration manager settings
+        volumetricShader.SetFloat("CLOUD_SPEED", ConfigManager.Instance.CloudsSpeed)
+        volumetricShader.SetFloat("WEATHER_SCALE", ConfigManager.Instance.WeatherScale)
+        volumetricShader.SetFloat("CURLINESS", ConfigManager.Instance.CloudsCurliness)
+
+        ' Set texture units
         volumetricShader.SetInt("cloudNoise", 1)
         volumetricShader.SetInt("weatherTexture", 2)
         volumetricShader.SetInt("curlNoise", 3)

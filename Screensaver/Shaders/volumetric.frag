@@ -61,15 +61,15 @@ const float SPHERE_OUTER_RADIUS = (SPHERE_INNER_RADIUS + 17000.0);
 const float SPHERE_DELTA = float(SPHERE_OUTER_RADIUS - SPHERE_INNER_RADIUS);
 const vec3 sphereCenter = vec3(0.0, -EARTH_RADIUS, 0.0);
 const vec3 windDirection = vec3(1, 0, 1);
-const float CLOUD_SPEED = 450.0;
+uniform float CLOUD_SPEED = 450.0;
 const float CLOUD_TOP_OFFSET = 750.0;
 const float CLOUD_SCALE = 40.0;
 const float coverageMultiplier = 0.25;
 uniform vec3 CLOUDS_AMBIENT_COLOR_TOP = (vec3(169.0, 149.0, 149.0)*(1.5/255.0));
 uniform vec3 CLOUDS_AMBIENT_COLOR_BOTTOM = (vec3(65.0, 70.0, 80.0)*(1.5/255.0));
-const float WEATHER_SCALE = 1.2;
+uniform float WEATHER_SCALE = 1.2;
 const float DENSITY_FACTOR = 0.02;
-const float CURLINESS = 0.1;
+uniform float CURLINESS = 0.1;
 
 vec3 noiseKernel[6] = vec3[] (
 	vec3( 0.38051305,  0.92453449, -0.02111345),
