@@ -4,8 +4,9 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Mandelbrot"
+             xmlns:p = "clr-namespace:Mountains.My.Resources"
              mc:Ignorable="d" 
-             Title="Tranquility Screensaver Suite - Mandelbrot Screensaver Settings"
+             Title="{x:Static p:Locale.Title}"
              SizeToContent="Width"
              ResizeMode="NoResize"
              WindowStartupLocation="CenterScreen"
@@ -13,17 +14,49 @@
              d:DesignHeight="700" d:DesignWidth="800">
     <Grid>
         <Image x:Name="title" HorizontalAlignment="Left" Height="200" Margin="0,0,0,0" VerticalAlignment="Top" Width="800" Source="pack://application:,,,/Resources/SettingsLogo.png" Stretch="Fill"/>
-        <Button x:Name="saveButton" Content="Save Settings" HorizontalAlignment="Left" Margin="300,555,0,0" VerticalAlignment="Top" Width="200" Height="39" FontSize="20"/>
-        <Label x:Name="resolutionLabel" Content="Resolution Ratio (Value: 1:2):" HorizontalAlignment="Left" Height="41" Margin="63,418,0,0" VerticalAlignment="Top" Width="235" FontSize="16"/>
+        <Button x:Name="saveButton" Content="{x:Static p:Locale.SaveSettings}" HorizontalAlignment="Left" Margin="300,555,0,0" VerticalAlignment="Top" Width="200" Height="39" FontSize="20"/>
+
+        <Viewbox HorizontalAlignment="Left" Height="41" Margin="63,418,0,0" VerticalAlignment="Top" Width="235">
+            <TextBlock x:Name="resolutionLabel" Text="Resolution Ratio (Value: 1:2):" FontSize="16"/>
+        </Viewbox>
+
         <Slider x:Name="resolutionSlider" IsSnapToTickEnabled="True" Value="2" HorizontalAlignment="Left" Height="30" Margin="338,429,0,0" VerticalAlignment="Top" Width="421" Maximum="16" SmallChange="1" Cursor="" Minimum="1"/>
-        <Label x:Name="weatherScaleLabel" Content="Weather Scale (Value: 1.20):" HorizontalAlignment="Left" Height="41" Margin="63,359,0,0" VerticalAlignment="Top" Width="235" FontSize="16"/>
+
+        <Viewbox HorizontalAlignment="Left" Height="41" Margin="63,359,0,0" VerticalAlignment="Top" Width="235">
+            <TextBlock x:Name="weatherScaleLabel" Text="Weather Scale (Value: 1.20):" FontSize="16"/>
+        </Viewbox>
+
         <Slider x:Name="weatherScaleSlider" Value="1.2" HorizontalAlignment="Left" Height="30" Margin="338,370,0,0" VerticalAlignment="Top" Width="421" Maximum="2" SmallChange="4" Cursor="" Minimum="0.5"/>
-        <Label x:Name="cloudCurlinessLabel" Content="Cloud Curliness (Value: 0.10):" HorizontalAlignment="Left" Height="41" Margin="63,300,0,0" VerticalAlignment="Top" Width="235" FontSize="16"/>
+
+        <Viewbox HorizontalAlignment="Left" Height="41" Margin="63,300,0,0" VerticalAlignment="Top" Width="235">
+            <TextBlock x:Name="cloudCurlinessLabel" Text="Cloud Curliness (Value: 0.10):" FontSize="16"/>
+        </Viewbox>
+
         <Slider x:Name="cloudsCurlinessSlider" Value="0.1" HorizontalAlignment="Left" Height="30" Margin="338,311,0,0" VerticalAlignment="Top" Width="421" Maximum="1" SmallChange="4" Cursor=""/>
-        <Label x:Name="cloudsSpeedLabel" Content="Cloud Speed (Value: 450.0):" HorizontalAlignment="Left" Height="41" Margin="63,236,0,0" VerticalAlignment="Top" Width="235" FontSize="16"/>
+
+        <Viewbox HorizontalAlignment="Left" Height="41" Margin="63,236,0,0" VerticalAlignment="Top" Width="235">
+            <TextBlock x:Name="cloudsSpeedLabel" Text="Cloud Speed (Value: 450.0):" FontSize="16"/>
+        </Viewbox>
+
         <Slider x:Name="cloudsSpeedSlider" Value="450" HorizontalAlignment="Left" Height="30" Margin="338,247,0,0" VerticalAlignment="Top" Width="421" Maximum="550" SmallChange="4" Cursor="" TickFrequency="2" Minimum="350"/>
-        <Label x:Name="terrainFrequencyLabel" Content="Terrain Frequency (Value: 1.50):" HorizontalAlignment="Left" Height="41" Margin="63,481,0,0" VerticalAlignment="Top" Width="235" FontSize="16"/>
+
+        <Viewbox HorizontalAlignment="Left" Height="41" Margin="63,481,0,0" VerticalAlignment="Top" Width="235">
+            <TextBlock x:Name="terrainFrequencyLabel" Text="Terrain Frequency (Value: 1.50):" FontSize="16"/>
+        </Viewbox>
+
         <Slider x:Name="terrainFrequencySlider" Value="1.5" HorizontalAlignment="Left" Height="30" Margin="338,492,0,0" VerticalAlignment="Top" Width="421" Maximum="2.5" SmallChange="4" Cursor="" Minimum="0.5"/>
+        <ComboBox x:Name="languageBox" HorizontalAlignment="Left" VerticalAlignment="Top" Width="120" Margin="10,10,0,0" IsReadOnly="True" SelectedIndex="0">
+            <ComboBoxItem>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="en"/>
+                </StackPanel>
+            </ComboBoxItem>
+            <ComboBoxItem>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="ru-RU"/>
+                </StackPanel>
+            </ComboBoxItem>
+        </ComboBox>
 
     </Grid>
 </Window>

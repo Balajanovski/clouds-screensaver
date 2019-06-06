@@ -36,8 +36,7 @@ Class Program
                 InitializeConfigWindow()
             End If
         Else
-            Dim screensaver = New Screensaver(DisplayDevice.Default.Width,
-                                              DisplayDevice.Default.Height,
+            Dim screensaver = New Screensaver(DisplayDevice.Default.Width, DisplayDevice.Default.Height,
                                               False, IntPtr.Zero, GameWindowFlags.Fullscreen)
             screensaver.Run(60.0)
         End If
@@ -47,6 +46,15 @@ Class Program
     Shared Sub InitializeConfigWindow()
         WinApp = New Application()
         WinApp.Run(New ConfigurationWindow())
+    End Sub
+
+    Public Shared Sub ReloadWindow(Optional selectedLanguage As Integer = 0)
+        Dim oldWindow = WinApp.MainWindow
+
+        WinApp.MainWindow = New ConfigurationWindow(selectedLanguage)
+        WinApp.MainWindow.Show()
+
+        oldWindow.Close()
     End Sub
 
 End Class

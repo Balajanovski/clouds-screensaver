@@ -1,15 +1,25 @@
 ﻿Imports Microsoft.Win32
 Imports System.Windows.Forms
+Imports System.Globalization
 
 Public Class ConfigurationWindow
 
     Private savedSettings As Boolean = False
 
-    Public Sub New()
+    Private initialising As Boolean = True
+
+    Private languageChanged As Boolean = False
+
+    Public Sub New(Optional selectedLanguage As Integer = 0)
         ' This call is required by the designer.
         InitializeComponent()
 
         savedSettings = False
+
+        languageBox.SelectedIndex = selectedLanguage
+        UpdateText()
+
+        initialising = False
     End Sub
 
     Private Sub SaveSettings()
@@ -28,10 +38,9 @@ Public Class ConfigurationWindow
     End Sub
 
     Private Sub Window_Closing(sender As Object, e As System.ComponentModel.CancelEventArgs)
-        If Not savedSettings Then
-            Dim result As DialogResult = MessageBox.Show("You are about to exit without saving" _
-                & vbCrLf & "Are you sure you want to proceed",
-                                                      "Exit Without Saving?",
+        If Not savedSettings And Not languageChanged Then
+            Dim result As DialogResult = MessageBox.Show(My.Resources.Locale.ExitWithoutSavingMsg,
+                                                      My.Resources.Locale.ExitWithoutSavingTitle,
                                                       MessageBoxButtons.YesNo,
                                                       MessageBoxIcon.Question,
                                                       MessageBoxDefaultButton.Button1)
@@ -51,30 +60,56 @@ Public Class ConfigurationWindow
     Private Sub ResolutionSlider_ValueChanged(sender As Object, e As Windows.RoutedPropertyChangedEventArgs(Of Double)) Handles resolutionSlider.ValueChanged
         savedSettings = False
 
-        resolutionLabel.Content = "Resolution Ratio (Value: 1:" & String.Format("{0:0}", resolutionSlider.Value) & "):"
+        resolutionLabel.Text = My.Resources.Locale.ResolutionRatio & String.Format("{0:0}", resolutionSlider.Value) & "):"
     End Sub
 
     Private Sub WeatherScaleSlider_ValueChanged(sender As Object, e As Windows.RoutedPropertyChangedEventArgs(Of Double)) Handles weatherScaleSlider.ValueChanged
         savedSettings = False
 
-        weatherScaleLabel.Content = "Weather Scale (Value: " & String.Format("{0:0.00}", weatherScaleSlider.Value) & "):"
+        weatherScaleLabel.Text = My.Resources.Locale.WeatherScale & String.Format("{0:0.00}", weatherScaleSlider.Value) & "):"
     End Sub
 
     Private Sub CloudsCurlinessSlider_ValueChanged(sender As Object, e As Windows.RoutedPropertyChangedEventArgs(Of Double)) Handles cloudsCurlinessSlider.ValueChanged
         savedSettings = False
 
-        cloudCurlinessLabel.Content = "Cloud Curliness (Value: " & String.Format("{0:0.00}", cloudsCurlinessSlider.Value) & "):"
+        cloudCurlinessLabel.Text = My.Resources.Locale.CloudCurliness & String.Format("{0:0.00}", cloudsCurlinessSlider.Value) & "):"
     End Sub
 
     Private Sub CloudsSpeedSlider_ValueChanged(sender As Object, e As Windows.RoutedPropertyChangedEventArgs(Of Double)) Handles cloudsSpeedSlider.ValueChanged
         savedSettings = False
 
-        cloudsSpeedLabel.Content = "Cloud Speed (Value: " & String.Format("{0:0.0}", cloudsSpeedSlider.Value) & "):"
+        cloudsSpeedLabel.Text = My.Resources.Locale.CloudSpeed & String.Format("{0:0.0}", cloudsSpeedSlider.Value) & "):"
     End Sub
 
     Private Sub TerrainFrequencySlider_ValueChanged(sender As Object, e As Windows.RoutedPropertyChangedEventArgs(Of Double)) Handles terrainFrequencySlider.ValueChanged
         savedSettings = False
 
-        terrainFrequencyLabel.Content = "Terrain Frequency (Value: " & String.Format("{0:0.00}", terrainFrequencySlider.Value) & "):"
+        terrainFrequencyLabel.Text = My.Resources.Locale.TerrainFrequency & String.Format("{0:0.00}", terrainFrequencySlider.Value) & "):"
+    End Sub
+
+    Private Sub UpdateText()
+        resolutionLabel.Text = My.Resources.Locale.ResolutionRatio & String.Format("{0:0}", resolutionSlider.Value) & "):"
+        weatherScaleLabel.Text = My.Resources.Locale.WeatherScale & String.Format("{0:0.00}", weatherScaleSlider.Value) & "):"
+        cloudCurlinessLabel.Text = My.Resources.Locale.CloudCurliness & String.Format("{0:0.00}", cloudsCurlinessSlider.Value) & "):"
+        cloudsSpeedLabel.Text = My.Resources.Locale.CloudSpeed & String.Format("{0:0.0}", cloudsSpeedSlider.Value) & "):"
+        terrainFrequencyLabel.Text = My.Resources.Locale.TerrainFrequency & String.Format("{0:0.00}", terrainFrequencySlider.Value) & "):"
+    End Sub
+
+    Private Sub LanguageBox_SelectionChanged(sender As Object, e As Windows.Controls.SelectionChangedEventArgs) Handles languageBox.SelectionChanged
+        Dim stackPanel = DirectCast(DirectCast(languageBox.SelectedItem, Windows.Controls.ComboBoxItem).Content,
+            Windows.Controls.StackPanel)
+
+        Dim lang As String
+        For Each child In stackPanel.Children.OfType(Of Windows.Controls.TextBlock)
+            lang = child.Text
+        Next
+
+        My.Resources.Locale.Culture = New CultureInfo(lang)
+
+        ' Prevent infinite loop
+        If Not initialising Then
+            languageChanged = True
+            Program.ReloadWindow(languageBox.SelectedIndex) ' Reload window upon changing language
+        End If
     End Sub
 End Class
