@@ -131,7 +131,7 @@
     <value>Выйти Без Сохранения?</value>
   </data>
   <data name="ResolutionRatio" xml:space="preserve">
-    <value>Коэффициент Разрешения (Значение: </value>
+    <value>Коэффициент Разрешения (Значение: 1:</value>
   </data>
   <data name="SaveSettings" xml:space="preserve">
     <value>сохранить настройки</value>

@@ -102,7 +102,7 @@ Namespace My.Resources
         End Property
         
         '''<summary>
-        '''  Looks up a localized string similar to Resolution Ratio (Value: .
+        '''  Looks up a localized string similar to Resolution Ratio (Value: 1:.
         '''</summary>
         Public Shared ReadOnly Property ResolutionRatio() As String
             Get

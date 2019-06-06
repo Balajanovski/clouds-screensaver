@@ -131,7 +131,7 @@ Are you sure you want to proceed?</value>
     <value>Exit Without Saving?</value>
   </data>
   <data name="ResolutionRatio" xml:space="preserve">
-    <value>Resolution Ratio (Value: </value>
+    <value>Resolution Ratio (Value: 1:</value>
   </data>
   <data name="SaveSettings" xml:space="preserve">
     <value>Save Settings</value>
