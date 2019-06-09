@@ -36,7 +36,7 @@ Public Class GodRaysComponent
     Public Sub Render(occlusionTex As Integer)
         godRaysShader.Use()
 
-        Dim sunPos = sun.position + camera.Position
+        Dim sunPos = sun.position * 100 + camera.Position
         Dim sunScreenPos = camera.Project(sunPos)
         godRaysShader.SetVec2("lightPositionOnScreen", sunScreenPos)
 
