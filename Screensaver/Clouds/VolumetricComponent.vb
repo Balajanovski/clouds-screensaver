@@ -40,8 +40,8 @@ Public Class VolumetricComponent
                    ByRef cam As Camera,
                    ByRef earthManager As EarthManager,
                    ByRef sunManager As SunManager)
-        cloudsResolutionWidth = screenWidth * 0.5
-        cloudsResolutionHeight = screenHeight * 0.5
+        cloudsResolutionWidth = screenWidth
+        cloudsResolutionHeight = screenHeight
         temporalProjection = New VolumetricCloudsFrameBuffer(cloudsResolutionWidth, cloudsResolutionHeight)
 
         volumetricShader = New Shader(vertexSrc, fragSrc)

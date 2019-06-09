@@ -23,8 +23,8 @@ Public Class GodRaysComponent
                    ByRef sunmanager As SunManager,
                    ByRef cam As Camera,
                    ByRef screenQuadRenderer As ScreenQuadRenderer)
-        godRaysWidth = screenWidth * 0.5
-        godRaysHeight = screenHeight * 0.5
+        godRaysWidth = screenWidth
+        godRaysHeight = screenHeight
         quadRenderer = screenQuadRenderer
         sun = sunmanager
         camera = cam
