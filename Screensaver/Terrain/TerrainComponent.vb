@@ -127,8 +127,8 @@ Public Class TerrainComponent
                       SHADOW_WIDTH, SHADOW_HEIGHT, 0, PixelFormat.DepthComponent, PixelType.Float, IntPtr.Zero)
         GL.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, All.Nearest)
         GL.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, All.Nearest)
-        GL.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, All.ClampToBorder)
-        GL.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, All.ClampToBorder)
+        GL.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, All.ClampToEdge)
+        GL.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, All.ClampToEdge)
 
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, depthMapFBO)
         GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthAttachment, TextureTarget.Texture2D, depthMap, 0)

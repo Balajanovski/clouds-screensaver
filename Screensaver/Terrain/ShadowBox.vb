@@ -8,7 +8,7 @@ Public Class ShadowBox
     Private Const OFFSET As Single = 10
     Private Shared ReadOnly UP As Vector4 = New Vector4(0, 1, 0, 0)
     Private Shared ReadOnly FORWARD As Vector4 = New Vector4(0, 0, 1, 0)
-    Private Const SHADOW_DISTANCE As Single = 100
+    Private Const SHADOW_DISTANCE As Single = 300
 
     Private minX, maxX As Single
     Private minY, maxY As Single
